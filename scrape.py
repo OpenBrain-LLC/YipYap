@@ -5,7 +5,7 @@ import time
 import json
 
 def scrape_youtube_fast(query):
-    formatted_query = query.replace(' ', '+') + "+official"
+    formatted_query = query.replace(' ', '+') + "+-official+-trailer+-movie+-vevo+-espn+-fifa"
     url = f"https://www.youtube.com/results?search_query={formatted_query}&sp=EgIQAQ%253D%253D"
     
     headers = {
@@ -22,89 +22,125 @@ def scrape_youtube_fast(query):
         print(f"⚠️ Error fetching {query}: {e}")
         return []
 
-def generate_massive_database(target_count=3000):
+def generate_massive_database(target_count=10000):
     topics = {
-        "Anime_Animation": [
-            "History of anime documentary", "Official anime opening themes", "Voice acting behind the scenes anime",
-            "Evolution of mecha", "Makoto Shinkai background art", "Pokemon official episodes", "one peace anime",
-            "Crunchyroll official trailers", "How manga is printed", "Animation frame by frame process"
+        "Animated_Learning": [
+            "kurzgesagt in a nutshell space", "ted ed riddles animated", "oversimplified history full",
+            "cgpgrey mind bending concepts", "infographics show survival", "ted ed mythology stories",
+            "kurzgesagt human body immunology", "animated paradoxes explained", "history of the world map animation",
+            "science experiments animated explainers", "how things work 3d animation", "ted ed psychology facts"
         ],
-        "Science_Tech": [
-            "James Webb Telescope images", "How AI works explained", "Boston Dynamics robots",
-            "Quantum computing basics", "Veritasium physics", "Mark Rober engineering",
-            "Evolution of smartphones", "Cybersecurity tips", "Future of Green Energy",
-            "How microchips are made", "Nanotechnology applications", "3D printing time lapse"
+        "Anime_Aesthetic_And_Art": [
+            "lofi hip hop radio anime loop", "how to draw anime characters pro", "studio ghibli background art process",
+            "anime piano cover synthia", "history of anime documentary indie", "manga artist studio tour",
+            "how japanese animation is made", "anime lore explained deep dive", "relaxing anime scenery 4k",
+            "making an anime opening independent", "digital art speedpaint anime style", "voice acting behind the scenes dub"
         ],
-        "Nature_Travel": [
-            "National Geographic wildlife", "4K Scenic drone footage", "Great Barrier Reef diving",
-            "Travel guide Japan", "Swiss Alps hiking", "African Safari animals",
-            "Deep sea exploration", "Northern Lights time lapse", "Grand Canyon tour",
-            "Antarctica documentary", "Volcano eruption drone footage", "Amazon rainforest survival"
+        "Mind_Blowing_Science": [
+            "mark rober crazy engineering", "vsauce mind blowing facts", "veritasium physics illusions",
+            "smarter every day slow motion", "stuff made here inventions", "action lab science experiments",
+            "black holes explained visually", "quantum physics for beginners", "deep ocean creatures footage",
+            "microscope zoom into everyday objects", "nilered chemistry experiments", "time travel theories explained"
         ],
-        "Culture_Education": [
-            "TED Ed riddles", "Kurzgesagt in a nutshell", "Ancient Rome documentary",
-            "How to play piano for beginners", "Art history masterpieces", "Language learning tips",
-            "Architecture design tour", "History of money", "Philosophy for beginners", "TED Ed",
-            "Psychology of habits", "World War II timeline", "Mythology stories animated"
+        "Tech_And_Gadgets": [
+            "building the ultimate gaming pc", "restoring destroyed retro consoles", "smartphone durability test",
+            "how artificial intelligence actually works", "3d printing insane objects", "coding a game in 24 hours",
+            "history of nintendo consoles", "teardown of modern gadgets", "raspberry pi cool projects",
+            "evolution of video game graphics", "making a robot dog at home", "cybersecurity hacker explained"
         ],
-        "Sports_Fitness": [
-            "NBA best plays", "World Cup goals", "Olympic track highlights",
-            "10 minute morning stretch", "History of the Super Bowl", "Skateboarding pro tricks",
-            "Yoga for beginners", "Tennis grand slam points", "Calisthenics workout routine",
-            "Marathon training tips", "Surfing big waves"
+        "Science_Education": [
+            "how the universe works documentary independent", "physics concepts explained visually", 
+            "chemistry experiments at home", "biology microscopic footage", "how engines work animation",
+            "mathematics visual proofs", "space exploration timeline", "deep sea creatures facts",
+            "quantum mechanics for beginners", "volcano eruption science", "human body anatomy 3d",
+            "how black holes work", "psychology concepts explained", "history of the periodic table"
         ],
-        "Coding_Programming": [
-            "Python tutorial for beginners", "How the internet works", "HTML CSS basics",
-            "Game development unity", "Machine learning crash course", "Linux terminal basics",
-            "Building a PC step by step", "History of Microsoft", "Open source software explained"
+        "Tech_Gadgets": [
+            "building a custom pc guide", "history of early internet", "how microchips are manufactured",
+            "smartphone teardown independent", "coding python for absolute beginners", "raspberry pi projects",
+            "3d printing timelapse compilation", "home automation smart tech setup", "cybersecurity basics tutorial",
+            "evolution of computer graphics", "keyboard building ASMR", "retro tech restoration"
         ],
-        "Movies_Cinema": [
-            "Behind the scenes VFX", "How movie sound effects are made", "Film scoring orchestra",
-            "History of animation", "Cinematography techniques", "Stop motion animation process",
-            "Props making tutorial", "Director commentary classics", "Evolution of CGI"
+        "Nature_Wildlife": [
+            "forest walking tour 4k", "birds of paradise mating dance", "amazon rainforest ambient",
+            "ocean waves relaxing 4k", "macro photography insects", "time lapse plant growth",
+            "national park drone footage amateur", "underwater diving coral reef vlog", "mountain climbing gopro",
+            "desert survival skills", "camping in heavy rain ASMR", "wildlife trail camera compilation"
         ],
-        "Food_Culinary": [
-            "Baking sourdough bread", "History of pizza", "Traditional Japanese street food",
-            "Michelin star chef cooking", "Science of cooking chemistry", "Knife skills tutorial",
-            "Chocolate making process", "Coffee roasting explained", "World's hottest peppers"
-        ],
-        "Automotive_Transport": [
-            "How car engines work", "Bullet trains of the world",
-            "Electric vehicle technology", "Restoring classic cars", "How airplanes are built",
-            "Submarine interior tour", "Helicopter flight mechanics", "Bicycle manufacturing process"
+        "Art_Design": [
+            "acrylic painting tutorial landscape", "digital art procreate process", "sketching basics for beginners",
+            "pottery wheel making a mug", "woodcarving ASMR", "calligraphy practice techniques",
+            "graphic design logo process", "origami step by step guide", "watercolor techniques",
+            "street art graffiti timelapse", "sculpting with clay tutorial", "interior design basics"
         ],
         "DIY_Crafting": [
-            "Woodworking epoxy resin", "Forging a sword blacksmithing", "Glassblowing process",
-            "Restoring rusty old tools", "Pottery wheel throwing", "Leather crafting tutorial",
-            "Origami advanced folding", "Building a terrarium", "Home renovation time lapse"
+            "woodworking making a table", "restoring rusty tools", "leather crafting wallet",
+            "epoxy resin project ideas", "sewing a shirt from scratch", "blacksmithing forging a knife",
+            "home renovation diy vlog", "building a terrarium", "making candles at home",
+            "bookbinding process", "knitting a scarf tutorial", "upcycling old clothes"
+        ],
+        "Food_Cooking": [
+            "street food walking tour asia", "how to bake sourdough bread", "making pasta from scratch",
+            "knife skills chopping techniques", "coffee latte art tutorial", "korean bbq cooking vlog",
+            "science of baking cookies", "meal prep ideas for the week", "traditional pizza making",
+            "cake decorating compilation", "vegan recipe tutorials", "fermenting vegetables at home"
+        ],
+        "History_Geography": [
+            "ancient rome life explained", "map animation world history", "history of trade routes",
+            "medieval castle architecture", "how language evolved", "geography of the himalayas",
+            "historical fashion changes", "viking ships documentary independent", "history of money and currency",
+            "flags of the world explained", "abandoned places exploration", "timeline of earth history"
+        ],
+        "Fitness_Health": [
+            "15 minute morning stretch routine", "bodyweight workout at home no equipment", "yoga for beginners",
+            "posture correction exercises", "calisthenics progression guide", "marathon training vlog",
+            "mobility routine for flexibility", "jump rope tricks tutorial", "kettlebell workout basics",
+            "core strength exercises", "meditation breathing techniques", "hiking trail vlog"
+        ],
+        "Travel_Exploration": [
+            "walking tour tokyo 4k no talking", "backpacking europe tips", "train journey through swiss alps",
+            "van life build tour", "packing a suitcase efficiently", "street view of venice",
+            "traveling on a budget vlog", "road trip across america", "exploring local markets vlog",
+            "temple tour southeast asia", "winter cabin trip vlog", "cycling across the country"
+        ],
+        "Music_Audio": [
+            "lofi hip hop beat making process", "how to play piano chords", "acoustic guitar fingerpicking",
+            "music theory explained simply", "synthesizer sound design tutorial", "drum cover independent",
+            "violin practice routine", "building a custom guitar", "audio mixing basics",
+            "ASMR no talking triggers", "ambient space music background", "history of jazz music"
         ]
     }
 
     search_list = []
+    modifiers = [""]
+    
     for category in topics:
-        search_list.extend(topics[category])
+        for topic in topics[category]:
+            for mod in modifiers:
+                search_list.append(topic + mod)
     
     random.shuffle(search_list)
     all_ids = []
     
     print(f"🚀 Starting Global Scraper (Target: {target_count} videos)...")
+    print(f"📚 Total search queries generated: {len(search_list)}")
     
-    for topic in search_list:
-        print(f"🔍 Category Search: '{topic}'...")
+    for idx, topic in enumerate(search_list):
+        if idx % 1 == 0:
+            print(f"🔍 Progress: Searching '{topic}'... ({len(dict.fromkeys(all_ids))} unique IDs so far)")
+            
         batch = scrape_youtube_fast(topic)
         all_ids.extend(batch)
-        
         unique_ids = list(dict.fromkeys(all_ids))
-        print(f"✅ Unique IDs: {len(unique_ids)}")
         
         if len(unique_ids) >= target_count:
-            print("🎯 Target reached!")
+            print(f"🎯 Target of {target_count} reached!")
+            unique_ids = unique_ids[:target_count]
             break
-            
-        time.sleep(random.uniform(1.5, 3.0))
+
+        time.sleep(random.uniform(1.0, 2.5))
         
-    final_list = unique_ids[:target_count]
-    return final_list
+    return list(dict.fromkeys(all_ids))[:target_count]
 
 def save_to_js(yt_ids):
     filename = "data.js"
