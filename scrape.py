@@ -26,14 +26,8 @@ def generate_massive_database(target_count=3000):
     topics = {
         "Anime_Animation": [
             "History of anime documentary", "Official anime opening themes", "Voice acting behind the scenes anime",
-            "Evolution of mecha", "Makoto Shinkai background art", "Pokemon official episodes", "one peace anime"
+            "Evolution of mecha", "Makoto Shinkai background art", "Pokemon official episodes", "one peace anime",
             "Crunchyroll official trailers", "How manga is printed", "Animation frame by frame process"
-        ],
-        "Gaming": [
-            "Minecraft building tips", "Zelda Breath of the Wild gameplay", "Rocket League highlights",
-            "History of video games", "Super Mario Odyssey walkthrough", "E-sports tournament highlights",
-            "Indie game trailers 2024", "Retro gaming console history", "Pokemon championship",
-            "Game engine development", "Speedrun world records", "Board game playthroughs", "Minecraft"
         ],
         "Science_Tech": [
             "James Webb Telescope images", "How AI works explained", "Boston Dynamics robots",
@@ -50,14 +44,14 @@ def generate_massive_database(target_count=3000):
         "Culture_Education": [
             "TED Ed riddles", "Kurzgesagt in a nutshell", "Ancient Rome documentary",
             "How to play piano for beginners", "Art history masterpieces", "Language learning tips",
-            "Architecture design tour", "History of money", "Philosophy for beginners",
+            "Architecture design tour", "History of money", "Philosophy for beginners", "TED Ed",
             "Psychology of habits", "World War II timeline", "Mythology stories animated"
         ],
         "Sports_Fitness": [
             "NBA best plays", "World Cup goals", "Olympic track highlights",
             "10 minute morning stretch", "History of the Super Bowl", "Skateboarding pro tricks",
-            "Formula 1 race highlights", "Yoga for beginners", "Tennis grand slam points",
-            "Calisthenics workout routine", "Marathon training tips", "Surfing big waves"
+            "Yoga for beginners", "Tennis grand slam points", "Calisthenics workout routine",
+            "Marathon training tips", "Surfing big waves"
         ],
         "Coding_Programming": [
             "Python tutorial for beginners", "How the internet works", "HTML CSS basics",
@@ -75,7 +69,7 @@ def generate_massive_database(target_count=3000):
             "Chocolate making process", "Coffee roasting explained", "World's hottest peppers"
         ],
         "Automotive_Transport": [
-            "How car engines work", "Bullet trains of the world", "History of Formula 1",
+            "How car engines work", "Bullet trains of the world",
             "Electric vehicle technology", "Restoring classic cars", "How airplanes are built",
             "Submarine interior tour", "Helicopter flight mechanics", "Bicycle manufacturing process"
         ],
@@ -119,5 +113,5 @@ def save_to_js(yt_ids):
     print(f"💾 Saved {len(yt_ids)} IDs to '{filename}'!")
 
 if __name__ == "__main__":
-    data = generate_massive_database(target_count=3000)
+    data = generate_massive_database(target_count=5000)
     save_to_js(data)
