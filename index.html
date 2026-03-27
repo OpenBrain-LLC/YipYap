@@ -2,75 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Real-Time Video Algorithm Engine</title>
-    <style>
-        :root {
-            --bg: #000000;
-            --panel: #111111;
-            --text: #ffffff;
-            --accent: #ff0050;
-        }
-        body {
-            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden;
-            touch-action: none; /* Prevents default browser scrolling */
-            user-select: none;
-        }
-        /* Mobile-style Feed */
-        .feed-container {
-            flex: 1; display: flex; align-items: center; justify-content: center; position: relative;
-        }
-        .video-wrapper {
-            width: 100%; max-width: 400px; height: 100vh; max-height: 800px; background: #111;
-            position: relative; overflow: hidden; border-radius: 12px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-        }
-        iframe { 
-            width: 150%; height: 150%; border: none; pointer-events: none; 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-        
-        /* Minimal Overlay */
-        .overlay-controls {
-            position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px; box-sizing: border-box;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9)); pointer-events: none;
-        }
-        .author { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;}
-        .author::before { content: ''; display: inline-block; width: 36px; height: 36px; background: var(--accent); border-radius: 50%; }
-        #video-info { font-size: 1rem; margin-bottom: 5px; line-height: 1.3; }
-        #video-cat { font-size: 0.85rem; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;}
-        
-        .swipe-hint {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.6); padding: 15px 25px; border-radius: 30px; font-weight: bold;
-            animation: fadeOut 3s forwards; pointer-events: none; font-size: 0.9rem;
-        }
-        @keyframes fadeOut { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
-
-        /* Dashboard UI (Kept for algorithmic visibility) */
-        .dashboard {
-            width: 350px; background-color: var(--panel); border-left: 1px solid #222; padding: 20px;
-            display: flex; flex-direction: column; gap: 20px; overflow-y: auto; z-index: 10;
-        }
-        h2 { margin: 0 0 10px 0; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px; color: #ccc;}
-        .stat-box { background: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin-bottom: 10px; border: 1px solid #222;}
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .highlight { color: var(--accent); font-weight: bold; }
-        .control-group { margin-bottom: 15px; }
-        .control-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #888; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); }
-        
-        @media (max-width: 800px) { .dashboard { display: none; } .video-wrapper { border-radius: 0; height: 100vh; max-width: 100%;} }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YipYap | feed</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="feed-container" id="swipe-area">
-        <div class="video-wrapper">
-            <div class="swipe-hint">Swipe Up or Press Space</div>
-            <iframe id="yt-player" src="" allow="autoplay; encrypted-media"></iframe>
+        <div class="video-wrapper" id="video-wrapper">
+            <div class="swipe-hint" id="interaction-hint">Swipe Up or Click to Start/Unmute</div>
+            <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
             <div class="overlay-controls">
                 <div class="author">@algo_feed</div>
                 <div id="video-info">Loading content...</div>
@@ -78,8 +18,7 @@
             </div>
         </div>
     </div>
-
-    <div class="dashboard">
+    <div class="dashboard" id="dev-dashboard">
         <div>
             <h2>Real-Time Telemetry</h2>
             <div class="stat-box">
@@ -89,19 +28,17 @@
                 <div class="stat-row"><span>State:</span> <span id="stat-state" class="highlight">EXPLOITATION</span></div>
             </div>
         </div>
-
         <div>
             <h2>Algorithm Settings</h2>
             <div class="control-group">
                 <label>Alpha Multiplier (<span id="val-alpha">10</span>)</label>
-                <input type="range" id="set-alpha" min="1" max="50" step="1" value="10" oninput="updateSettings()">
+                <input type="range" id="set-alpha" min="1" max="50" step="1" value="25">
             </div>
             <div class="control-group">
                 <label>Rabbit Hole Threshold (<span id="val-rh">5.0</span>)</label>
-                <input type="range" id="set-rh" min="1" max="20" step="0.5" value="5" oninput="updateSettings()">
+                <input type="range" id="set-rh" min="1" max="20" step="0.5" value="5">
             </div>
         </div>
-
         <div>
             <h2>User Affinity Vector</h2>
             <div class="stat-box" id="user-affinity">
@@ -109,188 +46,6 @@
             </div>
         </div>
     </div>
-
-<script>
-    const DIMENSIONS = 256;
-    let userVector = Array(DIMENSIONS).fill(0); 
-    let swipeHistory = []; 
-    let currentVideoStartTime = Date.now();
-    let currentVideoIndex = -1;
-    let ALPHA = 25, RH_THRESHOLD = 5.0;
-
-    function generateBaseVector() {
-        return normalizeVector(Array.from({length: DIMENSIONS}, () => (Math.random() * 2) - 1));
-    }
-    function addNoise(vec, amount = 0.2) {
-        return normalizeVector(vec.map(val => val + ((Math.random() * 2 - 1) * amount)));
-    }
-    function normalizeVector(vec) {
-        let mag = Math.sqrt(vec.reduce((sum, val) => sum + val * val, 0));
-        return mag === 0 ? vec : vec.map(val => val / mag);
-    }
-    function dotProduct(vecA, vecB) { return vecA.reduce((sum, val, i) => sum + (val * vecB[i]), 0); }
-    function getMagnitude(vec) { return Math.sqrt(vec.reduce((sum, val) => sum + val * val, 0)); }
-
-    const CATEGORIES = {
-        "Science": generateBaseVector(), "Cooking": generateBaseVector(),
-        "History": generateBaseVector(), "Nature": generateBaseVector(), "Tech": generateBaseVector()
-    };
-
-    const yt_ids = ["G8xELw231qs", "ytNlLVysvWE", "8PE0ifWIvQ8", "WoL2eKEzvIw", "cutXq1tcjlc", "jz05idXdXq0", "vkruiHXYUtw", "moCEi3yi1n4", "KLt5XzHxXI0", "snamerBMbmA", "fEazfYeKG5Q", "dQUrndnZDj0", "sXRPkBKqp-A", "SBU5zU5D6n8", "aEACJV9n3QI", "xK5_0OIpgRI", "wsP1mwz_PNc", "9LTZ8tbnc7g", "6WhHi41hHqc", "-F4rpBTw3Gg", "zC7x_DtekoQ", "m8ZT3e_h82E", "8S3d8EhHy74", "jOmIK1TfEYs", "vVPRbZ4Y378", "hVuTuib65WM", "8GISifWeDUQ", "HOYiVihbzkw", "hLe_X2LlIhI", "LmvtOwuO8ZA", "yJX7CFNQRBg", "2hz0qeqLkKc", "VhnLXHFRBbQ", "xfjbKzzOI7Y", "8Ut2shAMYjY", "LpF_QXJeNC8", "4apxx4gbAcI", "33XCa3RBFg0", "V7z7BAZdt2M", "bIiIrXM7BUA", "F6iPVoop1N0", "KRdPzTPvfQ0", "UkrVEBgBYYM", "fsg2nofBZ9s", "dxwZMEDu3Q8", "8_Aby6phHnM", "esHx5NHirN0", "CUlAg4iqeTQ", "6FfwUNb4EKU", "1FH2PddB7lM", "Tebgql_xZVI", "akdaXrlf_hg", "A5USmqd43Vc", "yPVQtvbiS4Y", "Zq3MAhM19Y0", "iX0XqRb7puI", "GfE9flA1dOg", "l8fksDda53I", "ogXr4g57ehQ", "SFKSXNJvbVQ", "2nT5lM-jL0I", "HpphFd_mzXE", "88gjOUjwnAU", "ryfB77NfLFQ", "tXDw4CpJED8", "yayUJXT2wWw", "jc6Z4KITPaI", "9BKUM3ItfJE", "PWugt3ikgTs", "qUIQJhtrzFE", "JOGFLUv9lb4", "chN6PhnM9uw", "s6HdyZZljCI", "9f_x7NFAnZI", "2ZgVrHE_NUg", "FEe4kEP2SqA", "sgCXFZpeswM", "h2CSJfqkSSI", "EmEnL025b8I", "yOdE_0taRds", "_xfRSZ9wWfk", "L5sfiVANB58", "XPRI6qpho8g", "wsuvmgSiPRw", "701otFiiDi0", "yemQjpTIU1k", "5dyBUMXnawg", "MSOjyBUwHjs", "akWA8-6s6us", "GG8M1Huo_2g", "04G1CYyTUa0", "bxYXChGm36Y", "5bDmmK15CNY", "vBlxvLQax_M", "lE6RYpe9IT0", "ieog1kj1AQE", "Pcc0Y9vaszk", "X8JIhLoouGk", "HSzJL-GJBHc", "ptr7px15q74", "lHcA7pPwYZY", "i1T0ehw8Pf8", "sg7pnw9gFRc", "RpA5L6MwpzI", "SVDPX-y3TjA", "rA52LE82L90", "N0LAlTOU2jc", "hYT44R0xBs4", "aAg3bwzSuLk", "_Yb4G_J5lLE", "8LpVXCMoKyw", "j-N_W4mskHU", "x0s5eJdEDEk", "4UiEqQoWrRg", "dwo_9JnXej8", "cc0bFjCe2Uw", "vMyOmvaaFIk", "aQC3EKZ3rXo", "fiKQp07faSg", "nu6fjVUVdls", "pLxheuVRSe0", "TbvU5khmOWs", "k6y3t2O0KTg", "nSDgHBxUbVQ", "TpAK7ESNgtA", "SnPPzpyCvHc", "qNrfHdFsXgA", "ZAdZHiLvroM", "WUoKaVNTq04", "MWT7i4FEZEQ", "tJrr3FAtf1U", "WwA_7QyqtGI", "JpBt0W1zrDU", "0t_29WWnORw", "BYXbuik3dgA", "Y08OkdVO4Co", "96-ANEcS26U", "jaa4-pArUwM", "rjCd0mYyXhc", "IT94xC35u6k", "L3w7FHq2EYE", "zWPC9Wsy98g", "-K5JVE03paw", "dSgP3J4fD6U", "UJvq6pzwJUQ", "YjZaLqC9_z8", "78Z0M5YaBok", "pd0vMTOm9s8", "yb89hksK0Ds", "s97C9jKQjMU", "DVD_gIdPr-o", "EHXYG53O6DI", "cUbe6HbFncE", "_7jgeJjLIwI", "4YV-Gzn7jkk", "2PkBD14vWh4", "VE-8sl9-pwE", "lymfyRBPd14", "cVBgy9mwKjo", "06JDURvWPNI", "FpFJv3LeXTs", "omUUQrvoYfw", "EGuYKXDpvJc", "a4iLG9nNKNs", "hxdSr03ULdM", "MrAWQdbrgtE", "OFWBgXRrJMI", "-9ocVnX7Td0", "oRquvLj-0WA", "eKFTSSKCzWA", "BDpqt-haLLM", "19TYGky8KvQ", "nDUyI0zNQXQ", "wnhvanMdx4s", "4_M4XIe7MrA", "NEHssvf9goQ", "hkUZWdKLAQ8", "GLXF6CEIFRw", "slA4mRDr_f4", "7JCbcb_70VY", "HrqgHbN4jAI", "dnMxCPSqMoQ", "Ao1tzPTm-40", "qG1WFpqyJRI", "CeEVhyjW8Ag", "WoEajxkSbrc", "eFgstB5dc3Q", "Tka6BJG3T88", "KwbRH1UJ8g4", "NDQ2CEcVzUM", "6_0CXUQjWQs", "z3uvnwBMTdY", "CDerXbIORmI", "CUQufa8LbMY", "EQOXFvxYZUw", "rsMsPMTkRAA", "5PQYM_KSXag", "SYyvx6GE2UI", "lIzRI-ATtZ4", "vsfFTSxmCvQ", "aXbgmRneWYY", "ia0B_suzKug", "buw4uL9SO4s", "PTCHv1H4etk", "ww_X2-ktVsw", "Lyx_r8TnFtY", "XstMdaIqjVA", "Gph6z7ZUUzk", "eYgq6ENYpe0", "MggrHX-yZfc", "FG8vRwLHDc8", "FMqU6oKEq90", "4KfYE5cP5Js", "hK0M14SfFI0", "FGcC_h8ro4Q", "gqVxgcKQO2E", "iqnpZngxYMs", "HgD80lp58TY", "w8K-g0LDi9Y", "0NNqAX7Pw8w", "fIbjI0EMLxE", "u-dEnJpCGAQ", "JP-_815KF3M", "p0NHTth7tK8", "7MeDWhu-hz0", "92ADCnWzVog", "JFxg9fIB_VI", "EjPSee2643c", "WafvNKk7Tco", "ObWZSOwz2JQ", "Ys7-6_t7OEQ", "rQum9swWUwQ", "pJxeyK7it0o", "s2OccJMWwkM", "af8pDBSLgeE", "jBABy_Q1pKE", "kaPgGH5HC0w", "kWZGuQz5OS4", "suv8opuD76M", "GB849RHzShc", "1rIJA720sc4", "GSjM-7CJs7M", "539npAj_I0Y", "pAP2p8PqewY", "-Kx-_QaEXto", "p6SavW6H3Ik", "trzaWnU7ELA", "3EKcdVsYdk4", "kRAQplzz-QU", "0Okxsszt624", "yhAmMUi2NmM", "o0tT5plmyRI", "lSSkQnHWisM", "gNmHDVPgaik", "tbsTSa1f9nI", "vmTQMjI1y4w", "m9mCqZ7tmUg", "QcF5jSIG7zA", "0EqunhSq-7c", "MimskT-N9-c", "997eRQa3ARg", "lxBhIfW4Z6U", "Y1BfDh7ESLw", "Ly_eQEGqNEA", "0YbSxBzzBE4", "zATh4i8Z7b0", "1ucEojAINHM", "lenl104oiFU", "IcvyW0wcXRg", "Y8kEGe_bjEQ", "5hiGMBaiW_0", "M2LbewmYs9I", "0Ii0Jk_0uIo", "K2P3oQc4K-A", "-lp2Kt6RJkQ", "dCNHNcVPdhM", "A1cbKgjsFvs", "Wrgx6STAaWo", "otQzetyz470", "H3qFRbdI_x0", "BzXEEmxioDA", "lVmW6KgPhuc", "RvP-uVNwnXo", "oEsgfNvG8cY", "nHhQnxlNDVE", "zBlytYhNCKg", "kZQUVo8VwxI", "nFz9AcytVfc", "srspkrwmEZU", "zi-gRD7pvlQ", "if3Ck9SZqww", "ToKX5K7o-Vk", "PScRm6pe3Kc", "YbLV7QSD0TE", "Kc7ZNyf6xhw", "ZcG4h3zqB1Y", "Qs7GPhPnrCI", "hEGiKzRU_mE", "Itdv5IKN2P4", "3WJE3i0wzM4", "9Pj4AqD6AlA", "fuiJ-3CdU3Q", "YaHerXYBQRo", "feLUycJF318", "gea-IfL6Wkw", "NhMs4nuu6Rc", "V0gCnX2JDK4", "gaUpU71Y_GY", "P6eKcUHnNek", "yDAAlojz8NU", "nX3Fr7p4hh4", "cifhF0mCouA", "1UyvTmTaMMY", "rsopY1c9_XY", "MwpBNJLi2g8", "vmqDvmo6hew", "c-USxjDlUhQ", "P2H_EDc75Mc", "dz04yXwSkQY", "5NS3kK3gglc", "BgpItxxtZ64", "ZrNXcyoy8-w", "e00BC_4uIWw", "fvVc4iKRTp0", "eARA_fHKRSA", "sBWOGp3QReU", "KflMqooMzF8", "q24y9Uu8Ud8", "nndg2kNC24Y", "wX7VHAzkTiA", "Us2Z-WC9rao", "lEuKMKf03tA", "OHluAKfM2Bg", "Ans8Y59cvds", "Kyy6wfWs2zM", "IE-mB3pJdEA", "4Z-KLkjICoY", "9fr26i3a7C8", "BzKMaXKUYvE", "VUg33pNa5zE", "8DIv6eU5kM8", "Ua8hOLbeggM", "jNI0fiX4q4A", "vIO1krG2-tE", "GhgTqfXGm28", "Du9-M0vYxEM", "X-Z35rPU5Zw", "DOKVREgWKbE", "maKztMYKI2Y", "ydxPUvhYsCk", "QlPxeBM1ioE", "seXbnAMreeA", "hudfSAdQi78", "F-Xs9s-q358", "uIqnZNua8kk", "LL5pu9GzziA", "A_OFOB7y_m4", "3Y3eGo0VBuc", "UTuAIid6x28", "byrNchwzYqg", "O7z3UYMVu-o", "hcOYMz6Mlg4", "oFFdtWnZ5Jk", "j6Nb7a8PeX0", "_wspAOlxdos", "-rqsRNpDXow", "9srQuHXUV0c", "W5Rpf73SYsM", "sz6-F1wYFkw", "nxwkn9Dt9-I", "YJz0IjkQzDY", "ntgWX-OgHj4", "__--6QSUtXI", "PhFQqCjq1uo", "UjRWQND6_ro", "zubPTEY3IYU", "5hHM3LdKcRY", "ohOdDhZn9Ew", "Hb2rKGfIOrM", "WWMy_rEigNg", "ITzFT2cJgIE", "j-6HQoLfjZc", "GuVhytz6ORs", "1amaL6p230s", "la1-otR7LiU", "TZ8Zqe6HkSI", "2lrB-fplrOA", "x2Sq6aA5AVU", "7TsRqpnEIYA", "xcXfcXJvMXg", "EYJm7hIYLSU", "wZ3zV7izdEE", "WDAzOiX5jsc", "7OASRaJhyiY", "rQQuenyHMyk", "yzKTO-6KWHU", "InxJAqeabNw", "PZ_L9liTUMg", "0H95Y_6gz4w", "ap6zRMHl2lQ", "UQPveNXU35g", "oULkAF9bkxw", "YTO1k2JoKU8", "Kc9PcDV49Uw", "q2_c2_WfJFg", "ztVV54sPOns", "3CBz31rx_i4", "wBf6Yfahb2I", "OJRUD5788Zs", "zkdO-q9zJec", "Wk9lY56Wdlw", "78jQ6JP5i3I", "3qET-ZLH_zE", "EIQV_MFXTc8", "Oiq_s41JmYA", "xszgMzbzerk", "4xLcB0NgcBc", "BCvRazfFinM", "bBiYiQ47ZAw", "2zmZhnapPcE", "gSk0uv6yysc", "M_s1-n7Euz0", "JqDxpCgCOLQ", "3ihtcnPwkqI", "-WNmTF_QjOg", "IWsvhHH3JKc", "8pooql5TdJI", "8tI0XtQ-7gQ", "5xOmzIM3Pjg", "SoXvg5olcT8", "XKM9anm8M5k", "qzsHolR05hg", "CQVNu_RODM8", "M1XplLyt0UQ", "ZE6KmHeoabY", "T2-L11FzShI", "dVsfHrtjLWs", "2Zcjj2JdCts", "vA4mEg-0rcM", "k1HBnZbOsf8", "ml-jcabA6ig", "No45YnGEwPI", "R7ZVIf6frE4", "jjthdxSM9Qc", "OdvK51iQwuw", "TwrD53xdeMU", "W5qHe3tV_R8", "3NvvOVrm1uY", "JjHmWtgNPZ0", "TQ3qEi8zxFo", "GxaOZ4r5KcI", "_bBRVNkAfkQ", "VbOALuHrK_M", "Y8GRlfKnePQ", "rL6uo5FRnKY", "L3gOf2XDp8Y", "a-8XiE7W7u4", "C6W_hMtN1kI", "8Ow41XXSdXg", "CPTIX1UTTdU", "5i8oPuHmWPU", "Twl0Xl7wugI", "6p6jQCqEnp4", "zwNwfnvme-g", "NL6a0x_L2d8", "m3v3PN5bvZo", "I2p_cfipbEw", "_WOF0Fr2tik", "8lFSGHM_CDQ", "ZMoGwIMLLfo", "elWEjbmJZ6M", "CjPFxnBexAo", "9pbxkE4Wh54", "NJrBjGMubBA", "VMPaHBmwP_E", "EJHSoYMCFyc", "xmKxn4gBAEA", "-gmDWPI03nE", "MNc_zuK9kCM", "VPKneyRHJ8E", "O9p6vNHwFlA", "4nUbBSurfRk", "IpYhsk5Qvr4", "TZqADzuu73g", "SeUDakhU880", "KLuTLF3x9sA", "CpoSTha9zpw", "Me85BsinWLk", "VEiyb76Ta7g", "lUdmbPkRmkM", "X9feVgz5ipA", "BnBmvoOg_pw", "Ssql2TQt0KA", "Z_5CiV7WyEA", "YAaoq1mcFUY", "zpIhFHYFeew", "AYNIl-nlDmE", "Pd4hYSNWbf4", "Q1snJtFdDTY", "JAjjJyUf0Y0"];
-
-    let videoDatabase = [];
-    let catKeys = Object.keys(CATEGORIES);
-    for(let i=0; i < 25; i++) {
-        let cat = catKeys[Math.floor(i / 5)]; 
-        videoDatabase.push({
-            id: i, yt_id: yt_ids[i], title: `${cat} discovery clip #${(i%5)+1}`,
-            category: cat, vector: addNoise(CATEGORIES[cat]), seen: false
-        });
-    }
-
-    function calculateVs() {
-        if (swipeHistory.length < 2) return 5.0; 
-        let totalTime = 0;
-        for(let i=1; i < swipeHistory.length; i++) { totalTime += (swipeHistory[i] - swipeHistory[i-1]); }
-        return (totalTime / (swipeHistory.length - 1)) / 1000; 
-    }
-
-    function processSwipe(Vw) {
-        if (currentVideoIndex === -1) return false; 
-        
-        let now = Date.now();
-        swipeHistory.push(now);
-        if (swipeHistory.length > 10) swipeHistory.shift(); 
-
-        let Vs = calculateVs();
-        let Vi = videoDatabase[currentVideoIndex].vector;
-
-        let diffVector = userVector.map((u, i) => u - Vi[i]);
-        let Rh = getMagnitude(diffVector.map(val => Math.tanh(val))) * Vw;
-
-        document.getElementById('stat-vw').innerText = Vw.toFixed(1) + 's';
-        document.getElementById('stat-vs').innerText = Vs.toFixed(1) + 's';
-        document.getElementById('stat-rh').innerText = Rh.toFixed(2);
-
-        let isRabbitHole = Rh > RH_THRESHOLD;
-        document.getElementById('stat-state').innerText = isRabbitHole ? "EXPLORATION" : "EXPLOITATION";
-        document.getElementById('stat-state').style.color = isRabbitHole ? "#00ffcc" : "#ff0050";
-
-        let denominator = Math.tanh(Math.abs(Vs)) + 2;
-        for(let d=0; d < DIMENSIONS; d++) {
-            userVector[d] += ALPHA * Math.tanh((Vw * (Vi[d] - userVector[d])) / denominator); 
-        }
-
-        userVector = normalizeVector(userVector);
-        updateAffinityDisplay();
-        return isRabbitHole;
-    }
-
-    function recommendNextVideo(isRabbitHole) {
-        let unseenVideos = videoDatabase.filter(v => !v.seen);
-        if (unseenVideos.length === 0) {
-            // Reset if out of videos to maintain the endless loop
-            videoDatabase.forEach(v => v.seen = false);
-            unseenVideos = videoDatabase;
-        }
-
-        let bestVideo = null;
-        let highestScore = -Infinity;
-
-        if (isRabbitHole) {
-            let anomalyVector = videoDatabase[currentVideoIndex].vector;
-            unseenVideos.forEach(v => {
-                let score = dotProduct(anomalyVector, v.vector);
-                if (score > highestScore) { highestScore = score; bestVideo = v; }
-            });
-        } else {
-            unseenVideos.forEach(v => {
-                let score = dotProduct(userVector, v.vector);
-                if (score > highestScore) { highestScore = score; bestVideo = v; }
-            });
-        }
-
-        if (!isRabbitHole && Math.random() < 0.1) {
-            bestVideo = unseenVideos[Math.floor(Math.random() * unseenVideos.length)];
-        }
-
-        bestVideo.seen = true;
-        currentVideoIndex = videoDatabase.indexOf(bestVideo);
-        
-        // Load YouTube iframe centered and cropped
-        document.getElementById('yt-player').src = `https://www.youtube.com/embed/${bestVideo.yt_id}?autoplay=1&controls=0&mute=1&loop=1&playsinline=1&modestbranding=1`;
-        document.getElementById('video-info').innerText = bestVideo.title;
-        document.getElementById('video-cat').innerText = `#${bestVideo.category.toLowerCase()}`;
-        
-        currentVideoStartTime = Date.now();
-    }
-
-    // --- GESTURE & KEYBOARD CONTROLS ---
-    function triggerNext() {
-        // Calculate true watch time based on exact milliseconds spent
-        let Vw = (Date.now() - currentVideoStartTime) / 1000;
-        let isRabbitHole = processSwipe(Vw);
-        recommendNextVideo(isRabbitHole);
-    }
-
-    // Keyboard Events
-    document.addEventListener('keydown', (e) => {
-        if (['Space', 'ArrowDown', 'ArrowRight'].includes(e.code)) {
-            e.preventDefault();
-            triggerNext();
-        }
-    });
-
-    // Touch / Swipe Events
-    let touchStartY = 0;
-    let touchEndY = 0;
-    
-    document.addEventListener('touchstart', e => {
-        touchStartY = e.changedTouches[0].screenY;
-    }, {passive: true});
-
-    document.addEventListener('touchend', e => {
-        touchEndY = e.changedTouches[0].screenY;
-        handleSwipe();
-    }, {passive: true});
-
-    // Mouse Drag (for desktop testing)
-    let isDragging = false;
-    document.addEventListener('mousedown', e => { isDragging = true; touchStartY = e.clientY; });
-    document.addEventListener('mouseup', e => { 
-        if(isDragging) { touchEndY = e.clientY; handleSwipe(); isDragging = false; }
-    });
-
-    function handleSwipe() {
-        if (touchStartY - touchEndY > 50) { // Swiped Up
-            triggerNext();
-        }
-    }
-
-    // Settings & Display UI
-    function updateSettings() {
-        ALPHA = parseFloat(document.getElementById('set-alpha').value);
-        RH_THRESHOLD = parseFloat(document.getElementById('set-rh').value);
-        document.getElementById('val-alpha').innerText = ALPHA;
-        document.getElementById('val-rh').innerText = RH_THRESHOLD;
-    }
-
-    function updateAffinityDisplay() {
-        let affinities = [];
-        catKeys.forEach(cat => { affinities.push({cat: cat, score: dotProduct(userVector, CATEGORIES[cat])}); });
-        affinities.sort((a, b) => b.score - a.score); 
-        
-        let html = "";
-        affinities.forEach(a => {
-            let percent = Math.max(0, (a.score * 100)).toFixed(1);
-            html += `<div class="stat-row"><span>${a.cat}:</span> <span>${percent}%</span></div>`;
-        });
-        document.getElementById('user-affinity').innerHTML = html;
-    }
-
-    // Initialize
-    recommendNextVideo(false);
-
-</script>
+    <script src="script.js"></script>
 </body>
 </html>

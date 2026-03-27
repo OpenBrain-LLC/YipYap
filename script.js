@@ -1,0 +1,358 @@
+const DIMENSIONS = 512;
+let ALPHA = 10;
+let RH_THRESHOLD = 5.0;
+let isMuted = true;
+let isHomeMode = false;
+let currentVideoStartTime = Date.now();
+let currentVideoIndex = -1;
+let swipeHistory = []; 
+let videoHistory = [];
+let totalSwipes = 0; 
+let recentCategories = [];
+
+const yt_ids = ["nFFiqwKCZvM", "xf3ma1XFt9Y", "H7Vz9jOmB30", "-BG7OQqCmog", "TRVfJ6Lq66o", "cWNR-6sBlqg", "cXWk8MEq3LY", "H31ajtV1PY8", "DJmp2XOXtXQ", "3PdYqL1r28w", "lYaVkaN-eLI", "nMSU26A2wyY", "26Lt9Bzixk8", "uf6n2q1qUYg", "C5TFqv1Vqt0", "Bd7NC3vFl_g", "05lSSJdXXDE", "jP1cc65wiNE", "tqpkMf_zrig", "IGMxfJYfkdk", "iuw7in7wJ5s", "9rzeUz7pa1w", "XpWpi_Jitt8", "Kb-UENo9oPI", "jZ38C-M3tyk", "OO5BVvdEWTs", "4iuHnuM2LLo", "nRnIevWoPLQ", "DMD7teNxxHc", "3b8j2eYpjuU", "MJsAsPTa5V0", "P1t41-Mx_JY", "ZKxB5zaTmgs", "OOLxOyP-2pM", "ERbTHQy_gOA", "y_eGi4jVYUw", "SwUvObWlRlc", "NmqVkvpp_qg", "kiTjI4ra1DU", "-zg7uWW13YA", "7A5YWn33eps", "tP7WlXbYJ74", "Is5IswM87EQ", "sVfYxIV0vOQ", "3ntfjZGgm04", "MNOWp8wLNro", "fjI_Akk5z8Y", "MmB9b5njVbA", "rSeHVB7xbMI", "sf7TC0poGlg", "PHeHRkKlYQY", "ZY34OTV30Ck", "FaLDBHodmGs", "Qr11AnVbaOM", "79RwQe6EN_4", "XzErG4zkGuM", "BL1oYVfNMNY", "KpPfi_osi-s", "4XmJPb4Qt5Y", "Qcpn0_BlK_0", "UssG5h_ZoCk", "Xg1ro-zG7AM", "yi29dbPnu28", "Rsxao9ptdmI", "TtdOdUi9b_s", "P4gNS0Iiu0Q", "9e9D7ABgHpU", "QW5L2fMriZk", "Twn_4AW0M6U", "pLtHyLlLt4Y", "0XgcOz95hTs", "wM5NHC97JBw", "86H4NwOnASE", "SrGENEXocJU", "DOWDNBu9DkU", "nBfK04-QPpg", "9c2NqlUWZfo", "1ekU0_GPi-g", "16LuvR2CARA", "M7-h3FO-KKo", "qYNweeDHiyU", "m8o2GrbR3d8", "dx_Ruw8vufI", "TLVatigUh1k", "nVyD6THcvDQ", "1aM1KYvl4Dw", "pc1_v13nnuQ", "U2hZFMVNSE0", "oJC8VIDSx_Q", "Ok-xpKjKp2g", "UdE-W30oOXo", "JcXKbUIebrU", "Yq0QkCxoTHM", "-sB12gk9ESA", "60LZ5Ie8XS8", "006V3t__xkc", "_6R7Ym6Vy_I", "hJHfZKYUKMw", "ad79nYk2keg", "uMzUB89uSxU", "PUAwDPUNyrs", "NnEUTYwTwI8", "DQfBn0Qc5TI", "-YCGK33c0xs", "8lf9f4IBnRc", "dmgMKbHyDFw", "1Gic5nYiAjM", "xPgPKRuFia4", "-EJKwJlWALw", "SndboQn_y4Y", "AzDhek7wt6I", "Ec9WcarGSTo", "G43vl3RKN5s", "P6itbK9kxs0", "UJFkrJ_UQs8", "sdtkVfFN2u0", "O3hnW7Kcp14", "Tllu3Qae9g0", "cRxSWtxbeY0", "69dMLpXosSk", "1KMcoJBMWE4", "1gGt1Mg_zSo", "ztO4Bk0ALGI", "3NUizzImhig", "89JWRYEIG-s", "ZrhZvqgtdYY", "fC5MKJDW6sc", "KIMhzkrQeZc", "1CyD0cr6k6w", "ChsLmEpdNrI", "scPBmrzdD0g", "IRjuAemfaQE", "IanqpvZsp_s", "REXhLXvN-bE", "b7ZYm_LEJ6Y", "FUzJJB8wLvQ", "0v9vGxNpP4k", "CWT-jxE36Jc", "i6KuRq3INgM", "8AUBIaLsmDQ", "s3ii48qYBxA", "gd7BXuUQ91w", "SkB-eRCzWIU", "zIdv2NDRExI", "jgcXclSXnVo", "avg65oY7sj4", "I4EWvMFj37g", "5XgBd6rjuDQ", "LKCVKw9CzFo", "dzHscTzpAME", "16d2lHc0Pe8", "hREnP0HslK8", "PeCBpI1hT2Q", "uwAqEzhyjtw", "ZtqBQ68cfJc", "v392lEyM29A", "hcaRTx7DsV0", "RKSzAr4P9zA", "oxuRxtrO2Ag", "AO0jzD1hpXc", "OLa8DQkKlyU", "dPgx9EH0e7g", "u1ojNgPCHGs", "Y_nr6AwAsSQ", "b5yGhEYaZzk", "E4Xb1DgmsQ8", "9YT9RMlusOQ", "c3_35hv8uME", "DAOFpgocfrg", "PU5PSjadch4", "Ctn4xMXg4-A", "XPi1dvJlA-w", "7Ifb_Jb24KA", "LtBzmgItrIU", "IflgXve5KHI", "-gdILnzYZEg", "anBtF96ckH4", "WBIdXKWa0WY", "43-Pb6uL1cE", "1QwyMWM0Jjg", "HhW5DLgwjTg", "74vIFs99CfE", "LiRse7BEEKE", "5uu7jk5jajI", "6OmJ3sKP2Rg", "ZQvfHyfgBtA", "zYMzE4xnjtc", "gqK3dCpwzxE", "DKF5dKo_r_Y", "Tpyqgc4VqoU", "Z_V_Qd89Jg8", "x70VqMrXrbs", "gaelXhngh5A", "1p91gmhlPNo", "X4PEVU7psMo", "ZSkB3zrU8T4", "xflY5uS-nnw", "JfOMZfxH4ME", "ar_EVYA69cI", "DHYDgcTnrjQ", "mY6gqqDkzpI", "-PDQlHwlXOA", "qeGQgPQsJJI", "wGfgQC9oRDQ", "KZLygdpg3LU", "zw47_q9wbBE", "Q9sAzTOjl6s", "7zX3D98tt-U", "1rPxiXXxftE", "f8ARKTrkdJc", "Z6BeAtdoELY", "r5S8yTb_QNU", "r6gQn18aemE", "9ep1DJw-Qoo", "-AQcohxrdpw", "1y5f5ip5dw8", "-EaO2S4Lyvk", "1P7d2JNCtX4", "Na1cIOmfBlU", "7gVvvE19Izw", "5LdenlAKb2g", "lyCMRVcGUzY", "7_vwxdO_A_8", "BmXxCdsyVP0", "E_IcKRmNgz8", "rjmr-kOYzTo", "GmqMicWcSZ4", "8gJBg0AwISY", "RUQBulM3_u8", "Gs_if1qHIhw", "A50sGl5MXg8", "9eOUDbbePII", "eZ_HvRboVnQ", "X4lwKT8H-Tk", "xFGwv7VeWjc", "kBW0PYM7kdY", "Jtpuy4GjmXc", "5-CX1hQsbsI", "UMRGaxr_zR8", "nUTmF2q8dDI", "rvDsR_zusOg", "r1wmC0It8So", "ORp_Qx6qZUs", "1s4VxJWaA-c", "PVQao6eVe5o", "MmmV7gbHVBU", "te93HP4uZks", "IRgkWmchIcY", "918nue6anzM", "eT0eSqEozP0", "E00dUXXQtoA", "_sOlSA_qZJs", "g-NUz0pQC0I", "h-oVmlwC_IQ", "TApeW5USC1Y", "HOjWt9mu09A", "QxQhi9Ai4Bk", "hgLQWIAaCmY", "Q-jjZMMxbZs", "ZbGi5zC--jU", "JGnsG8q1OZo", "0VclWzlhtFg", "fAJC8iO7zxQ", "DBFWJNX2gHo", "a1d5aAx7R7w", "m3s-mnx6bzU", "jzpQIlxp5Dk", "7FbcYYsMrcA", "bCiwg9QJywU", "1bmOnAzGiKI", "1DYH5ud3zHo", "c8hjhRqIwHE", "eHWb_ZBidF8", "ehUQNsyTKCc", "Q9tSyGMnnqg", "3_Q-yYfjeBM", "koUi-AgsowQ", "dPY-tTwjid4", "q8HTCO_lYmo", "sWFmukKFf7I", "rt1bsoOukjI", "Wv24TIZcdGg", "mREzOsy0kO0", "EnlHd5xTts4", "9YAIa9s0SBI", "yhsxxdSiqOc", "TWkSKz7mdhY", "lfkkPFVsadc", "JogJf_8MuN8", "HWGXf2h5YLA", "m_QhY1aABsE", "NM8z7j7yUHE", "hrv0sDACB7M", "34F71XqvOjg", "1qvK1T69uKY", "l1UHEkJKnDc", "tneMHQrGz3U", "9cLFAI1_fmU", "IwYx9hKWoGw", "ZrQFmiRJAZ0", "JllVotEWslQ", "bgHoQ_5dT2M", "vL2KoMNzGTo", "b8K5zFZ-8k8", "DeuY9jSYpr4", "mReIXUi9zJ4", "PaClrumypeQ", "y5aTMUnn2Dk", "62dQkCRZhP4", "rhLGh5bB01M", "t8HpVlineX4", "lL_d84cN1UY", "IiaVcT3SZv0", "JXfK30F7Edw", "ynRZQ9EBfRI", "S-LMSpzlnc0", "-S10B275Agk", "Y1Y0e6im-wM", "ajzQj7bjSWE", "SNLdYtBz6DM", "hMtOmZYLEOQ", "uQc-pW3QLuI", "JntKOmbMI08", "s9EM8FaPiDI", "tdhq-sBktSU", "W3Bgjj1-Pxg", "NoKp2GGLt50", "dQk_GPTBwa0", "V61V24dUEyk", "BeaVJggQ2dc", "FVzdkDLyuHY", "jPOjDNiC95I", "BjqmgEF7F04", "NK88iwkvjfM", "lHhqCyH_NP8", "CBSsL4u_nng", "7fYpWQq8Hb0", "XxQiY1qKv9Y", "Lrn2AONZyCM", "_xgn0niHD-E", "_TXzYVkSYuc", "69VY-yrxbX8", "8VY0RnxaZJc", "oEaMp5tzrHU", "kW140spadx8", "X23W_8uJHjk", "vE3Mbwhm0HU", "BCDnbDn0Qtg", "rsMsPMTkRAA", "cUnaTIYZjZg", "YrHpeEwk_-U", "G-Fg7l7G1zw", "aoqVGdmVlKk", "veE0E79dEEc", "fe3Mo_IzmT8", "QZvaw9Nduvk", "hLkEX19qD3E", "i3cZCfTy0bA", "dtEfBKJZrVQ", "yJ44SxiemMs", "nffGuGwCE3E", "Gl1wLtpdpKs", "Q26qCZBcPhU", "37d2J40rw7I", "RTA54NITdLo", "1eL7llVPuJg", "m1NR0uNNs5Y", "cpwMyit6Ew8", "jlvY5r6lPX8", "O6BTpgIZk9o", "jTOfOew316s", "IuTDuvYr7f0", "00ZXaXIABMY", "nWClyb8jXGo", "8lnJQKs2Lbc", "0OJHgQhNX3g", "epqX_EmrQbQ", "2NQrx-LqZrs", "MkibTJmaXj0", "fVuxq9EllCM", "F0AT_7uVbeo", "DcwfCyFg0VQ", "7z-hxGUwXVo", "I_qaccjrirc", "a2buHavAli0", "scfD0DXLM9c", "Jd1wzlwtKJ0", "rebIrsOs3I0", "eWcpsUbwNu8", "vmm6ffgX33A", "JmYAhy4mR9U", "Rdx8OZJ12-g", "VMt2io3NPrk", "oIQf0FomaJ8", "uX2cXg0vLrw", "uR1jvZbtH7M", "DitPK3bfFOI", "RZVB5rDVxBg", "HYadvDXnSJs", "B35E8QleVhg", "Z3UcZ2509aQ", "XfFFKeq-rtQ", "lTHpxqNfeIg", "D_Iutn8O4yc", "Z4JmcQkHOkg", "LdCw5Pd8Qvc", "NGGjNAyEZqM", "AswBfKEgDu8", "b9Oh5K6Mxoc", "UCPZzEbhNJw", "t22flliJLTQ", "2REkZG-dhHc", "Jo918IkVRms", "fyLrwS0Oet8", "Qz1VJycZcmQ", "oS2vixGSVxs", "68_7qPFH8PM", "tgP4AWWuRWA", "f-xwMrWX4C0", "CrvCSHAu8U8", "IPQSkd4rcLM", "1fjhIWJSxfw", "5Zx7peklVLs", "fvelEcd1rY8", "vRy5Ayt8xPk", "NxClTxKQHNo", "B0pYDrb_nzI", "ArqQ8Gn_tOw", "xjPi6IcSH_Q", "pS036KpTis0", "-F8ya_7odyM", "_a1bln3lDAA", "a-DdW6-NRCM", "IjUPOLU5ZG4", "oZQrOg3Asxg", "V2KS_s2ttLw", "Sk-dc9ybKuM", "-6KtwaavHUM", "5hLAEq7fU5s", "f3_q0dXOtu4", "tKmr4J-6FsY", "BcPTj_uPLsw", "dOe3n9eO6Lc", "6_amTJINPUg", "JGgpxiZnkCw", "aeZ2bHPor8I", "kmdLNVHoZiA", "6bzDlH_XLZA", "IYKL7lvrWbI", "Onx5UQ8OVHM", "G1hKzCkywM8", "lM02vNMRRB0", "q2_c2_WfJFg", "PgvRvgClMxI", "0xhzwDXfLds", "NoEIriuS0H8", "hpfVMPCR3xA", "8YIIZL2n8lc", "HOfNYgvP3so", "OMDRiSLpQuA", "Ejwg63QtBAE", "3jmunmD4CdU", "BDE9dERmaIY", "2b2gJu-g3qE", "gBxTbDNYO5c", "Ht_PB5fc_1A", "QKTiiBvxVxM", "fIZke_A9Md4", "ftlvreFtA2A", "fTn-XfauCPI", "3Gioc3QAJ7s", "AR1cSKxxSmU", "cUTevgY6ax4", "3DAi3IkVdZI", "ncUTfpRvykU", "PzOBN9h8k3Y", "KtK9VGTvMfg", "WSbwl3MwXvw", "W5SSv4dm5Rs", "zY6ZDJl_aqg", "6erx-iRIC-8", "nKD8FGwDkiY", "vq42IG0kCw4", "kNMoVUWNw9Q", "seozVCJESmY", "GJ6B8LS92lY", "uIFaKFjQSUM", "aXGKRW2Chtw", "7ZP9_lxJ6GY", "7yisyMO-Xi0", "xTmgJ8-HCtI", "8SJSS_CB6jE", "1Z7saW4wwSk", "z3hMX65Khtg", "rTN3zmcHeHk", "EWnjbhHXbSw", "r4fT1BeZDEM", "dHPTV4AHUyc", "d722bGusttw", "WBumqF5gwLE", "iaxkOJZxzQM", "FskTlUZyF_A", "G7EBiaDe_K0", "Aa8VhPDbxbI", "EaOMsueW9v0", "gUDSyBRhtUU", "ObtS79k2NM4", "iE-at9RW3VI", "zwDm6zeCw9w", "S5SpyXCTyz4", "1if8QYtg9Zk", "sP_nGy6d35Y", "s2JFnnE7osw", "uhoYIRJGnpg", "wpacThrQl4s", "1i4kJkFXBKw", "jw_MlQ9VGyY", "4gBAjbeUrjU", "7OS44cPz6wA", "27JRVfZYAfM", "7v-bshg-yOI", "hgxw7kO49xI", "S8AIWblEDqU", "CENDrJsXIp8", "5gv1E6tpzdY", "Z4877fx2hwg", "OwvcU3qGjEQ", "QO_V3h14Fyc", "W97RjIvffSk", "zqANjUGarAw", "u0C7VHX_f44", "ucnDvLrlUf0", "dIAnor5MBSg", "4DKkueqcKmQ", "77-TRPzqwh8", "l0K00gRerw8", "ubsBdWj2SoI", "aNjI4bpVfVY", "QAl50i6wXkk", "lfvht4lAjBk", "G2_rbDSFjqs", "u2mY4eFAetA", "AWs8XF7j-X0", "Cxef5VFmKlE", "Jvqo9Ino1lE", "3z2cnU8o6IA", "tkqE8FxwWTU", "f4ryBYz1m58", "iAYM9AkqbAE", "lAjSRKLhgkk", "9hwNCmp4jX4", "RhaepLsP5eg", "B-ukcWJzXwc", "BG8Lfpmb_mM", "b5BHNqu54X8", "9FuwiKyDxfg", "zLAYGZeVTPQ", "XvUHcsZOhJ8", "BDprlH1sK_Y", "g5E8dVk4XGM", "O18-FA83BaM", "Dpcmuo2CsP0", "1XkbjQxA6BY", "CVRUPTwBGIw", "c5N8hRyHYB0", "xQuAUBX5xBw", "z410TiEj9hM", "pMdJxVjZMRI", "q4pDUxth5fQ", "DLePx0dH2Tc", "cdFEhmlKmLE", "4wWQDyROvUQ", "7BO7xCCoQyk", "AEubKblcaiM", "4RDZ2jjWQhg", "RTD43OUqdCU", "rH-Awtw9xrU", "A9DyhGEIKAQ", "E8EkayjPrVw", "kXusDElOfoE", "59BNKO8A0dE", "H7hg92a6xQI", "uRFRqCmbAvk", "tk_y44tug04", "4_6iqldDFRQ", "URhs4Nb4TzY", "zYDqRWAHufU", "4gCnJBkhBqs", "V8HN6KxWP2o", "taROq8cIGH4", "mzWTjnM5uEk", "d2gY7U0dqKo", "OTKfjv6YB1g", "Ekv-hLBL9cs", "uCtoTudcbF0", "fWjsdhR3z3c", "kqtD5dpn9C8", "ix9cRaBkVe0", "b093aqAZiPU", "_uQrJ0TkZlc", "ygXn5nV5qFc", "QoIRX37VZpo", "rfscVS0vtbw", "t8pPdKYpowI", "j_JuhAWlEaI", "qwAFL1597eM", "m8DXAsyaMK0", "mB0EBW-vDSQ", "Ro_MScTDfU4", "Gx5qb1uHss4", "mRMmlo_Uqcs", "Z1Yd7upQsXY", "H2EJuAcrZYU", "mC4nyib2sfg", "St48epdRDZw", "N6BJVM5tvnw", "6uCHVNdijp0", "tPwy8zb1A_s", "ppwqvcPJijU", "hX3Ok_zPW4s", "q8HW2tRK-Yk", "GZQejHVQoYM", "mtTMWxMBjHY", "fpqmy1AlfA8", "6WOoDH3xD7Q", "9ZWjpxI194c", "WRgW-GOHw9g", "cRSS0VBV99c", "Rh2YrIxk8bY", "Y52WQygSrmQ", "0UCm9ID-Iz4", "osuCr7zfyfc", "cHANzfyo5F0", "uWWVNq5GHp4", "OD3kkgiccT4", "5sP4U8UT1ug", "RFOxIm6Zrt0", "i3yZAqheggw", "mcaP_6IVvKI", "ujF4wUaQLiQ", "OrsCEdzfe48", "RVq-UfyK4xA", "pUH058iRYwo", "rW9H1BhBBTw", "bycGfO7lHbs", "U6yhW3Yiowg", "krSWcXDMewI", "8MU8sI2xcEc", "iT_1Gj5VPP0", "hPge9W1emZI", "81PJz-3iFTc", "avM21CJYQxc", "sQpqTNPA2WM", "CHuwcm0P0TA", "vDHk388UHzU", "6A3L8jChSfU", "VK4tPNmOcUI", "kJ8HEsoI39s", "H4XL8s1BEdk", "yHtBhMrKnOk", "xBLVPuNstC0", "sBLWX5PwKQI", "kw0QVwt7LVI", "tDd0dDgP1OI", "VeBq9oMTTaQ", "Cd6USEYp_UQ", "PdLr3lTSyns", "ia1qd0CpowA", "j_8jAq17cSM", "s9JDd9zoelM", "6hM4oFNJumw", "S3WERANpWcI", "X-D5FERQzU4", "einnVSg1lnU", "U3u7_9ouLdg", "GCtqKRXoTnU", "V6F9h12eUr8", "YV_94RjG7bo", "XxgIEeIBCFo", "1GyhWl1wS20", "4xeL4Lpx3_U", "ghgwnQcibBE", "dtxrtKd-Vao", "HkLpAw9u-UU", "AUSwJ_dWETY", "F6nppF38Ysw", "HOmc_cVyBXw", "QxmFVB6_ft8", "Mfvg7G5DReo", "9hqFwNuF6FM", "7D7gnOxAgBI", "pbQlMUbErig", "Epx9CPBKWfo", "nEqaWJQp7Ds", "MJ7QYudRS0U", "8c4oI2hBZPQ", "OFCVkSQYTjA", "pSq_JvD9w0g", "Id1rwD0RU5k", "CeKnYi2vVgI", "1yuzuBqbEhw", "gW0y6K6c6Jw", "WLlo4u2HHD4", "tNsTVJX3oUY", "V3aeiR7plQw", "l15PgmJXi2Y", "FuiJHJz4f5Q", "BWSaIgoY38k", "XzrmWny6lss", "tSxb4dUDluU", "yAB5GeAN-tM", "AWhL4ePuPFs", "CNpTqyov9Pk", "KI_OqMwWCBU", "BDWBKLGehN4", "rVs0EdiVefM", "jyTqrylLqQY", "Kv2-8GM8C7A", "pyV68KvUwlw", "bK5TMc71FI4", "zPZ9WBPq8s4", "Qx3rlVT_7Zs", "ZFf4APizCs4", "ySdSMmj8Zg8", "D6cpa-TvKn8", "v5c1nxVTejk", "k7XQTcoFYTQ", "3BbbXhbAgdk", "HiLy0ppgqpU", "fj28UtF0-Fs", "mIkvxVUJaDY", "qDruZHXA4mU", "ocN13K1HWTo", "__SWnv2E-QA", "tmnMq2Hw72w", "-WUi1VhVFdo", "0vNzxtQVf80", "sD6aOsAYqro", "-DcKAUO9zuc", "bQ8kE0ZgP84", "4icFrd_o6cQ", "rewCL624QOs", "ZiO-WSHZ19g", "RTTjz3w8PxM", "Z7wYp0T70KA", "aVDVciiahT8", "2fCKBYgL6IA", "Im4Vg_TTbUE", "BSuEIMpj_S4", "IYtzR0npfq4", "ye99Nh-zCik", "Edp0NxL4ne4", "X4Nbvt29dj0", "MYWrMVWSxrg", "kWobbANluPw", "yrgO3R8mgGo", "3BULT0-joT0", "Vetvr96NUjM", "bzNKQ2FkEJI", "aD47CHWgdh8", "G_8R4SRvfao", "ftoXQsJtKPs", "g4G8VQ194sc", "EH3oHMUQ3O0", "YPMwtmEisHM", "TX-RsNGzAEU", "iyPjVtjKba0", "amRtNe2uVwE", "EbMDV7yBjrE", "t7oYtETjl1U", "PwOVanOWdzM", "tbQ59djyxSQ", "Sj-w0fJfmKw", "ih1h72HkrnU", "vIuzrV1dwPs", "mNVwzUW2FJM", "1pwhXUChn10", "SjONVCcvOpA", "AUXIuYHFgBE", "pLFjw0zKcgQ", "imQGaX_ZdiI", "PEROLnZA6p8", "hSaScGMPJi0", "8KyNBFGU7MI", "1T0xpD7J8nA", "HA-iJ7sB7m4", "VlbkuV7mk30", "oqY4QXwZ39s", "7O0Ct7yRI_I", "SFFiAcgeZMs", "-CQatuQdQv4", "YfbbXv5uDhY", "ewOA0MxJfsU", "GlxVJYJLTc0", "9Qak7Gux1gc", "9fbLquY7zZ0", "CDg0WCw7HGo", "ndTET8Y4GNU", "0iprbBK6bss", "_jX6NdiDElM", "NIk_0AW5hFU", "lcjdwSY2AzM", "YSJY3DvnybE", "qJZ1Ez28C-A", "pTn6Ewhb27k", "Q10_srZ-pbs", "yCsgoLc_fzI", "XKSjCOKDtpk", "MiUHjLxm3V0", "Y-W-w8yNiKU", "88bMVbx1dzM", "K-Fc08X56R0", "jyQwgBAaBag", "oI_X2cMHNe0", "J3i3F2e4IYs", "1Xp_imnO6WE", "DxL2HoqLbyA", "6etTERFUlUI", "bHIhgxav9LY", "t-_VPRCtiUg", "BPRE9o1cEgk", "wRAtVLgj-wU", "SvPKFsCiMsw", "ihba9Lw0tv4", "gx8Exu10Q0Q", "4pKly2JojMw", "wLCUTTdOVfA", "DmBl9x1e3oU", "bQa6VKPoyFw", "rBfdsyk8UK0", "nNixBuJWzC8", "BwlSjg6ESdc", "lKfICYeSurc", "UxU8OCsNbYY", "lxuTCHJSers", "aRVFt79LqCM", "t2jel6q1GRk", "W2hRlGrgoUQ", "T41mYCmtWls", "gWoBScE7flM", "DISjdfkSjc8", "aMNuQ1kyRGA", "YrE5RexFDPM", "-3v4OsPmsUg", "P_JuQCiKWUc", "twLqddk-VEw", "xPe1jMuX32s", "5cFhx_myB0Q", "1_s_srKtFZc", "-bdp9KYg_Vs", "rvwBcU1jXWc", "fcZYarkp-pA", "DFpS1WetihU", "hymVP5KABE8", "Jl0IDXkYKbk", "bA6-VEVAzCE", "3l3TFieqIvk", "fZqsMJfqIeQ", "vo6TbAvWbGk", "AT-ElP8uSTE", "Vdb9IndsSXk", "FcfWsj9OnsI", "XkvlY7qDXcU", "zWlePUUnm1o", "T75IKSXVXlc", "Kmhozhk5WUs", "c5rWB_fS5ao", "2VU5hhzrG2s", "Ia0LDGQqqSA", "GWF1L1mYbP0", "XzBp6Bt503o", "oY_CIX65kgw", "j-IacGailU8", "oJDzh2mVBms", "-vEhP3YlUug", "4Q_-W0DAx6U", "d0j6vmDqamo", "yYq4Kp6_ts4", "PJ4DuumRCPc", "tlM3jzcvUK4", "1DEmFZvZ4AY", "pjgvGiEHlNs", "7aNAsWBrSpk", "W16WhFwtdoA", "AgkMLohg6JQ", "1C_zuHf6lP4", "yNeprtMyAAg", "0_0HJbNzGb8", "Pu9DgOvwZ-w", "RC4NUi-VwLY", "ZKJ85w6y7bY", "lFiOZqyymUY", "1Ul2tR7qxqM", "dC1-qgR7YO0", "S8igQ0JTXD4", "7uZVEJFjuio", "MRfU9RR95A4", "fn1bNrGnjPY", "gFrS1lfvH7M", "AMPNvMFZCVo", "1TF22jOGsww", "9EYqAhb8rF4", "AvioLeO8Weo", "Gs1pTsMhhDw", "hJJrDbZzui8", "mbpLpxi9rJY", "z6TOQzCDO7Y", "_dmW-QDG5Tg", "LmyRZR8MaJI", "gfH-NLo8tRk", "m4gBaZcBHkE", "Sfzy05M-nzY", "q7iIeQ0XiSE", "7uTs6e9BvfY", "5Y6eInX7H-s", "iBTzh_aIvvc", "u0Ec_sX-boY", "ZhAPpor53K0", "v4rP8ji4fgo", "0koCRLxQWZ4", "MYHKlsi02dk", "er-pFeUvHWg", "XS2Y9hM-GZc", "uDqjIdI4bF4", "XIENI_jmsxA", "scc3kPIm_RE", "VhL8cmfSKQc", "2eAhUmhmnD8", "NWv2xsc00Xs", "MIgxv-wZOhA", "6ghMVf4s6h0", "v2zEatHj2j0", "bZwmRtLSSw4", "aIkghepQwi8", "niHbdOYAzOQ", "dtKnfZlLUl8", "s7-HELT-Js4", "bV7-RZqqu3Q", "if4YUnOd5DY", "7fUOTRr8M04", "u1ckyFp8W8w", "CHcyMIJlCis", "yKXH5vMWSow", "uoXQ1QLV-Go", "HgqoAw_lgcc", "zvMdDXxyxpQ", "yb3Ug5PlFyg", "TengZOvRTlc", "8K3di5HSz6Q", "YIPReDyhOZ0", "gWZ8PwO0CkQ", "bImk2wEVVCc", "MZYc1pdNVe0", "BwVnPEMpou8", "1QKtt6CTf_I", "PbhJgmkW4Wo", "nSAZNIx2_KU", "jyDqEr9usxw", "kKgIoroigLU", "JkMWoHjnaRw", "PuK6-UyZN-E", "r2TwpNQzMZ0", "zUsNjR-rhnA", "26KzUnEbTUs", "zZqxPozl2Ec", "UyRkTdewXVo", "xtHZKToMvus", "dSig1z3vssc", "LGNBp_wREts", "FdpPYy7R82A", "XnMZ-T86GP4", "ma67yOdMQfs", "taKe6HkbHVI", "oRwX9IHWg4M", "9ZMilNt7Blw", "QuR969uMICM", "B3U1NDUiwSA", "tsbCSkvHhMo", "IzGJw6daRTw", "RQWpF2Gb-gU", "Kv8N9alyYNc", "X8MZWCGgIb8", "b0ll-MGDdpY", "0BtDx7W6HOc", "c0D8X4eN_Cg", "-fttE1SzpD8", "g_IaVepNDT4", "lt4OsgmUTGI", "aeDbYuJyXr8", "HHV-P4_Xp1E", "dm6ux6d6kCA", "jO5L1VYMhGA", "LM3rwbVPyNc", "YcAXleNRfMc", "JRIPV0dPAd4", "9B7aIULFjrc", "J19kTbIHGBM", "t2jL3QP4hTA", "FyYgCxFFCzA", "jxxV1ENn6_w", "M1-CwC4oD4k", "ZUSEdRb3yVk", "SHUi2ScKz-c", "iLDN9V3e3CY", "RgUiCWSull8", "j2WnzJz4DEs", "3y_e1dzL61Y", "RI7G8LydRn8", "bRH3c9RfXtA", "ohPa-SJZYVc", "s2U3hqKfLWk", "e2hOLdVhp_0", "OBOBath0_qc", "7I11OfT2EzU", "pRJAfq_ncU8", "YV7v67KUG-0", "3u2LgAksdE0", "1kgDAtHMbIw", "iDBPLD3a8us", "F7HFWuo_utY", "k7vY_7hXC_s", "GywFnX6gwQw", "box4SFtGvA0", "6x9tBEri6vg", "A0zpF1c3aVA", "yk_G-AVNIik", "ySJVYB4nAa8", "Xu0jW0XSYtI", "crwcXwFUJy8", "0w9QA6OO6RM", "-39DgHt-Csw", "biTJLBeRb4o", "a0u06FZgitM", "wJS1N4qOnes", "N1zcps7nQaI", "lOuZ5iavrhs", "V0Y1EvWrQVo", "9qg7p-Ry4qo", "jxBSciHtHXg", "wbxWFaIiiWw", "n6tXwUv3ZQ4", "9NI4yO_3GxE", "lrrnyt5QvG4", "4faqpXz-cGE", "ysUMSRaldpY", "5tabss1Iye0", "sLTPDP1RGmE", "0NOEPb_KuZI", "Q-Hfw4gADx4", "4gy9Cinu3cU", "RXIsuSb8GKY", "0wm22i3qm8w", "x6Sww5Edc3U", "ElauLWD9USA", "Uy60wy20ADE", "AvElIS1ZyO4", "sdpxddDzXfE", "JFq2mN5vwqg", "QEbeBCArQaA", "dc6q04o8Y6o", "7BhJCK0PCF4", "X-O1-l0gP5Q", "RCsLxEkLI4w", "fj7ADr9DJpg", "R4PEwHsWdL0", "XNOAOQktG6U", "GeYcLGVzlgE", "7nwqG7F_af4", "8jnXJ7mD8kQ", "Gg1laGusABg", "o0KpNY3S6ko", "N-WK-6Nx-zI", "JHBGgUGmVG0", "ZqHizzWITuQ", "argpSxB1NQE", "x24KoVNliMk", "GoyGlyrYb9c", "pSuWOw7Ka3s", "ISxdVwPpQfY", "LA_hxbWewKg", "mlI2-h39gPw", "vQ0XSceaPNs", "z7-BN0qdZDk", "DdxH5rRFRbg", "zOi5VVDzpZI", "xSaiEiXt_ZI", "i8-V4yuM984", "kGxGTCXtWuk", "IGLdlkZozpI", "rH1t7vha2LU", "HcMm6TJoYL0", "xt3ccmwN5ZU", "wyRcxdw3gYY", "B9Tbcg9ltrU", "eS6a6btDK8M", "YtAL8y2lACs", "2SxXjN7WT90", "RhVN3COuXdQ", "qvo28NUtwM0", "kZ_4h9UA7Uo", "ydFZdu98oVc", "F6fEKVIa4AQ", "VDeQiANBFXE", "Vrtbxvefnjs", "1-TACMeF6pk", "6mtbp6rE1S0", "py5SK4mXwvM", "klTbcJX5ICU", "pzlA9HDNwBs", "bu_HMyC-gPE", "iXV1wLv5Qq0", "6BB3YRtzRxE", "sbYX4Lur4Yc", "EzJqbR2rPwY", "7mlYkYUPXAs", "i7Din__CZQk", "cRsqjy-qqag", "TGeNaBIfhE4", "Ij-BvQEu1LI", "pyg-DYm7b0A", "M4d3FXu9-3I", "fag_9LMMXIo", "Uh9643c2P6k", "IjxAEPh4DVM", "2W0T2qGZ9Dc", "E4rdw34WHKo", "MuNor5jjhVI", "zaCuGBWxAHE", "M4GXUcd_Mq4", "UZas45Zn9zU", "44WeDtVOrns", "NZLC5ekNJUY", "XGD0eGfKwlE", "bT1rp0FVuF8", "286SGzpUx9o", "XtQMytORBmM", "iqlH4okiQqg", "lMZun9SHv1s", "8fcy0_FQ_OA", "1x6n4ZqOFB4", "7vEyVcYUIzY", "_tE4phLuGyA", "fqb9MfRqK9I", "FiW69KIsQz0", "9HCTB4aZGTg", "H_5u_DVTbbU", "c-aEBxGPLB0", "97PeSdLarns", "4kg2N-t2tWI", "mvdhOEsCkAg", "RSJDDrYbEUc", "Rwv0Gzqh2Wc", "1hzX8qGaSEU", "eANjGomWZp4", "Uh3fNYVwDXM", "HA4_gVHBUXc", "Jc7ogKSFs_4", "im61iyNpimw", "ZC0DxdjTjT8", "HAhLl4xkt9k", "SXWDW62h_QY", "OQpCcQhNfxM", "mzeN0BXR4e0", "hI9ESfdK-nM", "3fnRU6jrL4s", "yrIPno2cNrE", "IKnXrbg_VoY", "EF8C4v7JIbA", "IF-Gj1tZnWw", "FmR14Yng9kI", "p0G68ORc8uQ", "6NnLfbTCM2I", "khU9e86ovas", "pWy8womUPKY", "u7JJusUZQ40", "wgnckaNcHqs", "yzh2YCdf14s", "DP4epIVQOCk", "oAeFUkvoWuk", "Vw34wMAqWzc", "VLyJLp7kH1A", "c0cUE-ePDEc", "E1UEWy_vKfE", "RIuMdCnCFok", "BERBv3K3cSc", "dZpLa0lU1nU", "6mi1VfbjGB4", "PLrQJKU6e-g", "BnAOL7z0GY8", "QtSMXXJq11Q", "ewSjlLltsHA", "AEk_PbiptYw", "vLmSZrMJ4us", "A6wI8vAXzIA", "x5OtCngO5A4", "o50N3-OaGdM", "P8frC_cLLD4", "fKsrERSd_Lo", "j38Fqcnfz6M", "TNlEtPJPjJk", "Fvgo56zZkeo", "mmLrPy5LdLI", "ru0_t4H1TLA", "M-WADbIX42s", "pgNTOLRStE8", "GRde7WGScrM", "Y0xoStpHex4", "UOr7wlJItPo", "ut2KhcNtnm8", "SfMO6GH1Vqw", "i7pXihbC-Ww", "NGmH2UQ-prk", "PjF2QCpYw_s", "QRFFFjq1MS8", "_CGUwNzlXyg", "Z90V0iQth8g", "YFjd-zI42U8", "HpRqlehZ0X8", "yc8SlAiyneg", "oL-AOAOSTFw", "XzdaSX3u30s", "0IOsk2Vlc4o", "oqSk-MqDb3c", "UFQqyV1IQh0", "wdCFzekN2Kg", "278bLXejs_c", "fQk_sEQdW0w", "zRNs7566xVc", "WlBXjReBZh8", "xY2BjDp5qEs", "qzv_wQBkSvM", "9-kYEGjG92E", "y3lveOFgUtM", "Dyf6b9qdqzs", "PVD1LNDxOnc", "rSmkCdmL3KE", "2q91vTvc7YE", "1ehpgbb3XD0", "MVKLi_d9_L4", "U-ZS68L2hRc", "SpeDK1TPbew", "EMi3PCW23yQ", "My_j5ImBHek", "L2NEN0ESVTM", "_3uHJKDfkZg", "QQzBACyX12M", "_51tSnhDha4", "Ggymc5_pWyA", "_ajq3avegMA", "6CHMF9NmEEc", "a4ap0R_OQIE", "MNVM4_O-Jz8", "P0xwiM-azU0", "TEttd0Qkqnc", "5TZtQAYOtnA", "f9jePqf6qms", "1uNpjqH-mQQ", "9Pd_9RuUY8U", "WwBkiyhp3rQ", "pthRJjGZJTU", "BU5m7APWnb8", "G4rlHY27sa0", "0QidJypaU2M", "IVI5L18mmzQ", "hrF3jVppfr4", "hUYtDA7j19c", "PuK3SNa6_kk", "jHeNTYivwOw", "haNKd5i-u60", "m-95TPuupsg", "c64QhXOklDA", "qXkGEjM09QQ", "EaLlFrlhT98", "5H-UoFsohGM", "XpevOKRFHIw", "aoCmWFusqRk", "H6OHVrQ5tcw", "JD0U9RwMe-c", "1_FpUJoxlls", "ymgGUi0ItAM", "o0ueenNzBsg", "1J2oCsPQcJw", "PnhElL_7HXE", "kWIqQFA7Gko", "-5gz6imnITc", "sG19LuNEWFg", "FLtohZ7Z_-I", "3en6Td8etso", "xakNow6NVx4", "YKIAwUyVF6Y", "EbSCkVXGz0A", "SU7jFzTUloE", "SrS26mXQGiA", "TKFYeSqcxh0", "2ZIfqLDG_Qs", "Sq-y-wiZduE", "jbBkOLjW1O8", "2tNp2vsxEzk", "KtQ9nt2ZeGM", "zwsAf0do-yo", "UVf2Yw7uFoE", "gLvkWpnzba8", "BsVhgta2WAo", "uwfwBfrFHKU", "Z8JFCJP70rg", "bC-BYhuFUtY", "b1LQSezKxnA", "VXwGvLj4rak", "sjvXX9EfgUg", "aYBGSfzaa4c", "c7xlTRW8ZLA", "kNa72pD47o8", "0osZGYuXrzs", "KqaNXGVNXb8", "TYLKPb9ciw0", "tk3_-EWoJY8", "rQG7O6zfALA", "S-bHuiPQ318", "JdU0gDDCiB8", "j-3zE1u6Nto", "Aqeb3gaNOgM", "EK_UM1-BG2k", "X_YHXdCcmVc", "24A3y2WLrno", "r1XE8ON8fos", "FGJ-gCuMCo8", "Fqx5nIw3YOA", "M10wpAUndmI", "Avw0_VjiQkY", "OWyWf23LpLc", "fFHrsYYPGdA", "Wz5Sxp43nCA", "4WCbjCyauLA", "i5NPnPE58qs", "DQx96G4yHd8", "0ugyzbjRqiI", "zFIWWM0Iv-U", "7oedD0KS4Do", "4P_z4vMqMog", "dFyxfMLt-s0", "YVKhcPm3T5A", "oB0B2kWq9mc", "WsCCYv2adkM", "R8PCKNW0ypE", "3M5XyPK0OBo", "EmJv_eOfrDc", "gnkkvUATpnI", "Huemt54sv80", "b9Hq6bTBF2A", "qlvsezTyv5o", "9EZCpppRh5Y", "zbXSfN71LHg", "jT_Jyiq1ceo", "CqMq6O88Tmo", "E-sF_1FgpJw", "gFTYNp0HWTg", "CtO_XE2Nrho", "dGGU4rAkShE", "6UXjRCORV44", "Md78VKgefo0", "HOkQYYJsJig", "PQFZDc2UDMU", "HiqEBf-gn-I", "mr9X6Fiic-s", "Qa0U194FHPo", "Ub4jHJRleUc", "ptmtIPtGQvU", "N0pWYJYYLeQ", "Wuz0sHeVpx8", "l8pPFgH-4gk", "w7k8qVb3qt8", "odFmJp0pEt8", "oucL2T9CO3E", "vh5jaFpbXUQ", "fD3bSb_dNLQ", "Q8CTrYr_8dg", "WvVxJx2RJJk", "yJzgccLZvLI", "rhkJMPIZGKE", "8DFa73_uwas", "ShkIrQrQ2yE", "Gfh4WUkWtcM", "VLOrmGbfYj0", "hSuCJ7oaD6E", "uqvOlViKfts", "OVxe7q4GX6Q", "gyiOVjbrMt8", "mpRoSoK0vcs", "th_kd7Nraa0", "yEoaXj1jn-o", "ONUg505n_R4", "aV5l1G_1hxY", "dk93vrx5qkQ", "Yutzg2NLwcU", "7rMgpExA4kM", "hqiVF6JMRZI", "1U-9rB86h3o", "HuYJBQBB6II", "lISR37EWMWU", "kRw8dpWtX38", "p3VwCU3Srjc", "9nNrsXFdNr0", "HmPiS7oMXck", "J8pCVyIRXkg", "sAYz0NCQHqk", "Cmet3VIXvN8", "EQZQEWzoVMI", "4tz4_i5-UAA", "WTmFXPY0EGI", "xA9iS08lx80", "ZvD1viJFtZ0", "pSw0Dh6kd_A", "wzPZDhvQDQs", "p5SygzMSLhM", "wVjMFU11hVA", "_ppedXZHhE0", "xCBOiaJEoFw", "lZdoUgNTE8E", "g5wgXmOqcMY", "pJDKp6IXtYc", "9sdZz2a_zPg", "-DzV3-1lnTQ", "jXqqd0ZBEMA", "IvwelqA4tLM", "a0Zif2aG0gM", "2z36dAwcKqA", "JmVEwSQNrqU", "bIO5zo5czMc", "DxieIvaRAF8", "jZvQzkFcKEM", "DjVkzpJ5diE", "RnFrTQ6WKXY", "2D056kX4Hm0", "8rAe8RuICYM", "3pGu42-h3wc", "GtPqDPhx-EI", "K9w8I_YD29E", "IiyBo-qLDeM", "awBbfc46rZ0", "lyN4jj3Vd1A", "d7Mcsgzl6ls", "ZYiWIKnm8_A", "ERjx1ThpXcY", "ecAHSt0Xneo", "syfBwAfdfWw", "o3UkIagTVSQ", "rjnOtuVY4vw", "2h4MQ8zA_Vg", "M3ofTRxZHqI", "h1mnlGOXxF8", "IX-gQSyXSU4", "NJks7JfGKxM", "ANdLOY4rW04", "7v9fNsdQUBA", "7DKFvrWDHMM", "lkzfwGsKp8M", "9TZO2zBovRw", "yyrY2mc0LX0", "sAwvgPtUV_I", "lxAKbWr1bwQ", "XHu8j9_VYck", "EcYeWnFj7S4", "aefO0N_DFWw", "AAh4SAfdln0", "4hIKndS8D5o", "G3XBMG96-Qk", "WOKYgWlXwk0", "7-Cv35UKbXY", "rahtTTARC_c", "eqMalydTqPw", "f4LeLdgS3W8", "drXLCci9H5Y", "-TKwfCk5DWk", "6wb-iQRtfVo", "6L7NnZWeW-s", "j1SgIoROS7s", "q8dcnh-4I6g", "whD42TK0dYw", "cF6qaUftxlA", "q5OMBYKNXW8", "GJ0Hn4ywOlY", "HkfO1alRWoM", "EdyC2DmHA6E", "3sXz96MdKzk", "SOvbFHUpf4k", "Dyl5NqrT5P8", "mmMG_56bEFQ", "_AovxHP8vV8", "wrKtCau6XX0", "AhgtB-TqS3w", "nualB4Fl88k", "qo8r1oFke00", "EuNguMnSKnA", "oj_mGjxuItU", "kX9nB5ld4gQ", "_DNzTCd7-jc", "pWqT8i4GaMo", "XyGfxCxnZW0", "MB7YIYER9hk", "gthG0_KqniY", "Nq-SyxUvXNk", "g4OwUsVp9jI", "fOi3_aKNWoo", "Vd_nLf-Kz4Q", "Pok6EN3cfA4", "J6Flw0Hyd_A", "WA0scznjjW4", "3_d3gt8JryQ", "xFsJYuyEgCY", "yrgm7z-z6eo", "euKM6-V_yKQ", "a6A5S30I97U", "7rXQALFgV_A", "xx032AiC87I", "b9_Vh9h3Ohw", "pUWvEga5gWE", "nrdNdprcYls", "srE_Frusw3o", "9QoMoU1HkPU", "nJBxiZoDSYg", "qkQtKnLkt3g", "iKJ555L4vUI", "V1_h14yFkHQ", "cRrtIildKDM", "My4bDJ6WeuY", "j3RbnsHTuVw", "eFRoPLMwW_Q", "RxFaVaND6rE", "dfDk45Qm6GU", "8c0cbclITmE", "2FbHsapR24E", "Yyo_tL8Xhc0", "HLXgWAr2lr8", "z-EtmaFJieY", "SAUeGtyLsrk", "E0Hmnixke2g", "4qVRBYAdLAo", "PeMlggyqz0Y", "i_LwzRVP7bg", "a0_lo_GDcFw", "n1BMtnBTjGY", "NOJOYcmyDhM", "JxgmHe2NyeY", "Fa_V9fP2tpU", "bmmQA8A-yUA", "b2q5OFtxm6A", "QM0sYbEQSkM", "nIgIv4IfJ6s", "0kZIGB_dG80", "72AHKztZN44", "VyWAvY2CF9c", "QoK1nNAURw4", "CLPkVvI9yFg", "QF3ZZeSoufE", "ZIgxsMtjE8Q", "E_rwyu6cdmc", "10o8IRxb1Lk", "IMb-URlqV5Y", "N6gaZ6gS_NM", "fhdUNSUx7Ms", "jZkLydH49xM", "A4O9xk8aRTo", "y6SVkQmposk", "bCEC4d-KaQU", "uy8bQaW_Nnw", "JoTbcO2Lr34", "hl8UAaQpC8k", "SBo_iTnvPk0", "BKio-LGWilM", "rc9nNj5_zho", "q8WO_Q9simo", "W6bVhPQqrnw", "QYiddvAhffI", "XgDuG_sE06Y", "HW-SWsVeqLA", "PR4FPvzSBiQ", "VPJW9X7Agsw", "jYXdUMgygSM", "j9xO4dMuS0U", "xsFIKrJ744c", "cknFa4rEbZE", "Bqj2Txnjvfk", "hNcG76DqOiI", "-tmTS-ODIME", "qw5ONnkBbvc", "34zPJRh_1Cc", "B3HhrYdzkiQ", "_hoGpYyn4Bs", "mPlSTrflPvI", "yZ6vLoEoC4c", "RiH8UKQl5hc", "4Y8eHOp9ah4", "TlhHMVgiIeM", "jRlOT_zSw3g", "oHPy7r2RDVE", "PqzRuDfy6iY", "Hm5jvVVVgDE", "rGDxkIXKQ3Q", "pHj-zUDbZ1g", "sOz0KkzOJws", "X86b7Km8S7o", "4FTqjHMLskc", "W2zK9q8N-4s", "rFrtS8M7lOI", "HsKSAEf7h2s", "FuDC6a_rBag", "JTXHRH_G2oU", "kvCKh_V7uBE", "LA7BRXhH_dQ", "fMK8F5Rb-1U", "PeBl_zlhzm4", "54KJQ-NUMgg", "OlbOOzX_fDs", "rdAoreF4k8o", "wFWutlIUfjU", "UTv3obzRXRE", "Ap8jTCMK3c4", "UHlfTBs5THI", "av8j7p_6lcQ", "ah8U0-fV6k8", "qeVl2-BWDqs", "-Hw4iTB_Zs4", "MiQe9ob9aDc", "YpxhAJzuyJM", "COk0Sbbc_co", "Rpu4uREBeDM", "gc_BSpXl360", "Pcqa9O_kM00", "wVd836vHl6s", "VC2aJEE7R6c", "r10g5gERB04", "kb9c_MoRHrA", "Z1L3JNpq7Oc", "IKtdt83xAvA", "JwiMzDhWvvI", "k36c57zwKNA", "IrbRml6qSi4", "jK0cGKMDMPE", "uSHfkAEy7Ug", "tp_L8kzeigU", "7j5LPuFxATw", "xiOzhY1SRS8", "wTXIsGEDQaE", "DKyYrk37UOA", "mm27MC2dOaQ", "bWTH1IrnmlI", "sRFrHhJ7Roo", "ElTGH7cZa2E", "nxRVKaxfkG8", "RsKObKLKm_M", "xllWGsMcCsw", "93H1i9Iyk-A", "ChsJPFvjMk8", "jqEHDaKFZ_w", "o8_chDNgefU", "63ryvQ4sGkw", "tuPG_Qz3pyE", "RZdc_U6IvBM", "BASYwlGqXbc", "KZ0pWiw5QOU", "-HLwTwlAw3g", "gDge_Zgrm8A", "MjNJFkWEu04", "Pk4q_O1QJRs", "kpaga_3BWfQ", "-WnsDHOeYPE", "mRiENrHqzFw", "HbC3COF33k0", "FCUiYknWiX0", "Axf2hKLOcUU", "K39s6gtogb8", "LM5GRndeogU", "gxqPbGqYACw", "LV801eQzUQ0", "DgGdlCOCK8s", "P3IIRiSTc3g", "QsVg3gZEi6w", "zxKPjD8urG4", "GXoEpNjgKzg", "QdCAtXENxBc", "XUXxMgtFz7E", "Wb_aruwUan8", "WKpQRXdvAqM", "z3uvnwBMTdY", "SYGaGN59Swo", "FGOkOYiNCy0", "0ZEzEBUCOAc", "SDpWXtXjlks", "8401mvYD-UM", "xiAY4UJfplI", "tPunugK7WqY", "6moWz2TrGgs", "5BbUNIAPbK8", "Bt2JUZPdKu4", "KiLA6Bk_ivs", "7C7d3gXhQR0", "FgdXRnHj0wc", "cV70nR-OCWI", "oxR6I-KRAug", "LULEvE63lNI", "e410afWOESI", "FWu2rkffYvg", "JBgmGJRhVes", "4wCFw8HoSWM", "F7_zfPxn-JE", "Xye2rm5BEw4", "qoivze00lAI", "IQHQVOF3Mls", "NN_xjwniMLM", "HNohZ00K0IE", "uvj6x0s7DBY", "aYgPiGNrQQE", "Wg_jwgmwt-U", "52FuKwsTXY8", "4gpTco1KyMA", "8Zx7fFFfPis", "pqfF_uKgSy4", "MFSx4jWmDfY", "eh3nC3acIIY", "p0LAw31zUNE", "OOg-4mtA3Zo", "zYS7RRyHAyY", "pHz8M3rPTMk", "XmaQGYA_Yv8", "BYHtzT5t-tU", "hPcP9V_g3gQ", "Ck3f4Rs9sr8", "27j7ZcGl0Ls", "L4sVoK7TAdc", "wDkRhUKYZsQ", "wKjzij5DP7E", "yBIqEBh7_DU", "AFcTaLQ4bys", "JqflfjrcKjo", "5pZsKUo4axQ", "qFDObDh67zs", "LQb3na0fIj0", "kUlJBRceh-8", "LVB9n5FbPKI", "_LrLLvxksVw", "F_g3nzwrSuw", "uq0AoWd-SdY", "bJQV9JHiMho", "eBIKfcQa21c", "HUzggMjVze8", "_vbNeYh3C54", "7ctaKuXLhgE", "kgpmjMNs2mk", "Ms_XOy5MG6g", "sFu7otAhX9Y", "L-QDus6rq6Y", "GxkLiHpye0s", "CPTDoulPcRk", "2cKFre8I7Z8", "kBQC7yHDXZM", "FLlkwMik8iA", "QYyRdOqCKKo", "Fi3zmrDjF6E", "3ye295CDlt4", "4gEoh3sk2AE", "CTuGXdyrWUo", "QWiouzzCUcs", "C8PUlZrngZQ", "VEtU4Co08yY", "BzrFfUvRlTU", "UL6ogX38NcY", "gTHKEOTF5nA", "oidnwPIeqsI", "XIyMvbaxR6c", "-9Osn7JsP1Y", "-JRSF-zDgvk", "vmb0wWKITBQ", "2FVfJTGpXnU", "hNCL6jwRJTo", "s8dQ2hnYqp0", "esJ2bTDeizI", "HlJEjW-QSnQ", "Oaq4OPx4xlI", "j_qL2RPsHXQ", "4Z6tLkBhKIk", "7W3TwaIAlLo", "ALMYkPqgTUM", "Iyp_X3mwE1w", "CMIzdj9QNmg", "mNOYS-duUJY", "XU2xd2b-GTs", "MicJ46YX5Lg", "3SAxXUIre28", "kzsyJROQOas", "wW95gSLJkCY", "RVRyFhpCQio", "ptI6BRVC1Kw", "tJfERzrG-D8", "T7fGDw7U2Wg", "RMxB7zA-e4Y", "J34h9Qoyx0Q", "h5ysddrlXLw", "sZOuz_laH9I", "VPFp-zqjbMA", "FIxT6rK02lk", "nE_-wilGupQ", "qIfjibyt6pY", "idhDz9miZ3w", "GjXY-l1EnhQ", "ObA4ne4TVsE", "Wcs2PFz5q6g", "FSZyzhi8C9o", "HXuj7wAt7u8", "vN1aRN5bQQ0", "J-aFZYfQRus", "wr6fQ4KpbRM", "WQ40hNdZmfQ", "HrDvGz9OBxU", "PZ7lDrwYdZc", "9wDE7h1O9yo", "-moW9jvvMr4", "498-bf2BhgQ", "EyC5yJVLlUM", "5t-scLHEuxQ", "KZ2cy_wsb9Y", "AOHT-YiOeQA", "AxClpbA6VB8", "N4v--PNtHWA", "pOfW-qdsvpU", "Vhl2K4XCpb8", "VRr4SD-Mdi0", "rDOstmYXLVs", "Ik6IGiCzFzQ", "6yEv1SEYPSw", "7QbCWOAuNlQ", "CcFTYQ80-hA", "ZFZHyDdgMIo", "1Q8Vr4b7wHE", "aGH2prkeVW8", "38XHXMdDegg", "OvTyI0YiHLI", "MnkAS0TiWrI", "AEWdbuU5BoU", "bBREDCOHEdE", "UldeXA6T4_A", "Idx-R5lpx70", "m7kSClNAOLU", "7yDmGnA8Hw0", "asbbhyHBSKU", "z-ZEfxAL9SI", "9uZ-jeZS8d0", "XkHJyqZqjxE", "7Vd1dTBVbFg", "BSF9s0gbJ2M", "UIeT1zxsus0", "OGHB8zUtfp4", "4peuImhJj44", "98TQv5IAtY8", "8xXslshomOs", "c18GjbnZXMw", "xMcOUyyk9Hk", "F5sZQ4Xutgk", "mS5eEhLN57s", "zoZVuqP1rQM", "N3JL3z4e2Qs", "LKvjIsyYng8", "jMA7pWIFmIg", "2tdnqZgKa0E", "YJBhWVDArLo", "u1lU64CG8p8", "qf29pqPWDOU", "5zSvOSYrUTA", "b3T5YUGZUdk", "xairCL9m9ec", "tZr7lTJPQu8", "iz78Naiv9xI", "U6HjohDNRqk", "QJkMyCvjIpk", "t4c12Tfyj8A", "ByXtOWpDFls", "1Tc7i1_sZmk", "UhGNJUCfxgk", "kvVvdk4JRmM", "D-kIlMq3qmI", "2r8WSnF1ee8", "_5A6ahUP8Jo", "nCNZExX-Rik", "OceRj-8avxc", "R5jCyP2Jcjc", "7e8fxx2kNBo", "3XYZYlLcWYE", "IWa5YpoEz4w", "DlY8PsqmTRA", "i6VVegoRuy0", "Hqw0barvNVk", "mUeNqLcx4eI", "UIzp4xAl3-A", "3rcka6P2cVI", "jRrZXI6f_IU", "NeOOGthG-cc", "Mv6TyVhh0M4", "v_BmwKl9Inc", "u8wrPlpeO5A", "7A5JB-e4Dq4", "kdtI2yuHxaY", "Tz3rnKVOGv8", "yp3NG4JvXus", "asq1D62nuDA", "ND3lBY9VO-M", "aMgB018o71U", "dEdFM0uQpA0", "3qZw3ZS1IAs", "qkr07CutHrU", "DC-Xn2C_L1U", "Mho0M1Ns0Rw", "3vl1hd9vlqA", "beW8pCezrdI", "V38NoO2xiVw", "PXaLc9AYIcg", "Hj75_aDCpfw", "-8LMML_EiMg", "AJtfMrwmtZU", "hiqQbO1-Vdw", "OirozwewjEQ", "wbXFbQIzHiY", "qCPIEYfN_hc", "WNSgj3yPXTA", "tsu0Rw3Nqi8", "KZjJXrNSrBg", "ZDbHnRWSXTk", "DEA0_upu4sQ", "4FYqmK1Nrdo", "dU5Mcv4eLUU", "maQBzXkWQ8M", "UXt8z3djUak", "-ECO5fkxGMs", "P5d9omYAk40", "02iAzakZsdQ", "Ct5tnRDGwLg", "ilI86d20uJM", "53_cuLhObr8", "YI9uI_x3Y-o", "J433f6Yrd0g", "xuqZF1ofkzg", "eEWIuyeNp2k", "Y_43_u9u_Ag", "GE3UHx7TKpg", "ha1PwOzuo4k", "bEOu5YIzu6c", "fCPN1Oslyw0", "uZM734BIICs", "BcGGh4jQQ1g", "cp-KXqJqvsQ", "KYydVZRbl6M", "nJkyH6MHHOU", "02O3RyzTn8E", "Tt6WQYtefXA", "IkRXpFIRUl4", "dX9CGRZwD-w", "Y8tiCArU5pU", "g8Qav3vIv9s", "RJsAqqObj-Y", "52GoRYP1les", "B2482h_TNwg", "jciQNpAc3Qg", "vuvckBQ1bME", "1JkzrR-hznE", "9RZreu5z_Gc", "F2KcZGwntgg", "B1VFmpxUTFM", "bor0qLifjz4", "nkwJPIJJ3hM", "i820xO9VADM", "Q5paWn7bFg4", "VNzkhZBjo5k", "mpMimSbhcnE", "sgHDIUxR23E", "ZrruckoSmBU", "-2pm9yPCiRg", "3HZUP_MNJzY", "vDwQpTFW2us", "CzzvOv8Scx4", "Yb8mVCxhWkU", "4kEE2yFqCwo", "2-pkK6sszMQ", "Q-x8iHxp8T8", "uz3LIgyo5aw", "NBJTHJG9Qc0", "mlLt2TdRrdY", "xZFgiA1iLJ8", "2U1npAdGTUY", "EKkjpTz7VsU", "_aUoHV4uu44", "t7rOHV3v-4w", "L7ymZCZMehc", "voGVSql4aRI", "wdW_kCU0IxQ", "z9wFkRUIF-o", "uUQFQnqXpHU", "tBACZ3KeoSw", "ZXJcb7K49a0", "yDAAlojz8NU", "VD6xJq8NguY", "Zpq1GbPqhy4", "MBRqu0YOH14", "uzkD5SeuwzM", "zozEm4f_dlw", "4Stzj2_Rlo4", "Pj-h6MEgE7I", "tRXy-b6_lBc", "h6fcK_fRYaI", "H4KMQuyxH_Y", "gtDKKJq9u30", "oakWgLqCwUc", "VB_GWz25B3Q", "uqKGREZs6-w", "PaErPyEnDvk", "_zfN9wnPvU0", "isdLel273rQ", "D0WQK7cMJn8", "dqwpQarrDwk", "yx0HgMXnF1M", "0QrZj_HSSag", "PfpsJE93kp8", "Ecpby4qv_CQ", "OG9mr95od24", "aH8Cu_JDngA", "Wt5Q0Se1dRk", "dGekG98WokU", "ay6e423fW0w", "HsmKUwF7vrg", "DlMZro2xbRI", "13VbzE8K-u4", "i-LYxVzU79g", "SxfBDX5ycPo", "RaAFCFehdcw", "UZQRZmRHnYg", "RKpyTDoLgew", "PREzGuGjpc4", "2XSmwU3TB0U", "KFnZHaqMopE", "bcEfI_Vp2w8", "J00_lsKLI3U", "kD_2jvnlkAo", "H4uZlJoSO4Y", "uOkEle1X7fQ", "gOFN5cqM8D4", "NVm4QTepNUQ", "UFMukGqAz7w", "3ms0jTQD5GA", "vZdYo_1Pwz8", "E9lrZnbnvGE", "jJCJdsX0lV8", "IfO8F8gswlI", "-sM_WxDpdqQ", "i-xMswfpnIo", "Cd1Tc2UpnDY", "aPiaIKTpHLs", "TFP1rO5ujcU", "sveMFL9O9GM", "ZRU6VemlA14", "iCkBphvuLKw", "uFKcSL_IHgg", "2b5F22wL1K8", "E6588DlZW-c", "9Y_Bg1kaUXo", "tX8DnJojCuc", "xQXiSGDXknA", "CsgovUpUFVo", "-u1ZROC2o6E", "vmkVPVT97vY", "f3K8RW1hl30", "C84pmy5e4lE", "Y4xaiu9N_i0", "npLGg7Z4vO8", "N_AnWhAQWmE", "WQemp2fbYK0", "7cCW8Dddvjc", "o_XVt5rdpFY", "KvtAPcbVRIk", "bLksi7Wt0yE", "nsgAsw4XGvU", "D9JCwkx558o", "XJRS3aLVE78", "-pyfvAHvtDo", "56yLoF-PGbk", "ivTYfOWXLmw", "Y4y2e4rUxfo", "Y93qFCJWygA", "Ql4wGGTDapA", "e7-QQvhFvoU", "xCxT2NFCmco", "JaUhrGPs9Gc", "K5yaWx5AFJU", "utKvDXhS62Y", "bZiWZJgJT7I", "591E6zqWqA8", "kBdfcR-8hEY", "oiW3qIM0-k4", "DdGSYKKJB3w", "uRDy4M5jI-g", "TNQsmPf24go", "J8hzJxb0rpc", "O31TcSo3Unk", "95-yZ-31j9A", "hJHvdBlSxug", "oDQXFNWuZj8", "qQYiwmamq38", "6mBO2vqLv38", "xPi4uZu4uF0", "XZmGGAbHqa0", "g-SL4ejpP94", "NyZWSvSj8ek", "kQrVg5mb-iU", "53q3gscB7FM", "0eKVizvYSUQ", "SbWkdMdFGNA", "oIRkXulqJA4", "qBksg5JPLz0", "RsQ1tFLwldY", "gT0Lh1eYk78", "Z4pCqK-V_Wo", "salY_Sm6mv4", "1PnVor36_40", "9z8FP8ear2Y", "G3e-cpL7ofc", "qz0aGYrrlhU", "j6nOnIT-T1o", "J35jug1uHzE", "_GTMOmRrqkU", "tfzGsCxutWk", "X4sClFRMJ00", "cZHp-Oozg6I", "VSwaoQ3TFkQ", "i1FeOOhNnwU", "dC34rfY8Eyk", "DHGhFJZLKMs", "D3iEE29ZXRM", "HGTJBPNC-Gw", "Dfj0B6aL7Hs", "I44_zbEwz_w", "tF4DML7FIWk", "-e1_QhJ1EhQ", "UNorxwlZlFk", "TQA4iYEU1Ew", "sd8ivhpjI6g", "fn3KWM1kuAw", "ptYDWP9uTis", "rrUHZKlrxms", "MG4PPkCyJig", "wXxrmussq4E", "n6ISdRkS37I", "YIhzUnvi7Fw", "ll784fIsQew", "rTiL9R_Q5PA", "kHBcVlqpvZ8", "6Zbhvaac68Y", "zFUHi3_oiXk", "HYwekersccY", "LMPxtcEgtds", "f7As0yBCppU", "56nQjJZIqoU", "YNBShnaT84I", "Vx5uUjkbzTc", "yvD3gczib-E", "khSJX44_s1Y", "RWm1VYvtPsc", "JE6PtW4grWE", "WwA_7QyqtGI", "cK9WA2Od_5s", "nmijQsHxXuk", "8ibgkwouP4g", "i_5XdNf8Ssw", "u-TDa87W3Bk", "xr7C8YHWoj8", "fUiQSo7fxxw", "w3pTGZDKqwk", "ZFjUMv-7kqY", "nIG00UlYbgk", "elcOxmCBr3U", "U_tqB4IZvMk", "0GPGfDCZ1EE", "UO3N_PRIgX0", "lmWLuHk_mT4", "RLLbTTmje-Q", "NhKTP5_LfU8", "l2WCrXc7J-I", "WnozP8OWeik", "zrcpfwIkcoM", "HNvZYzg7o68", "ZMlt-6XUW-U", "cVcMWuEeQ0M", "ZP_P5fqvnd4", "gCbxcDCcd0g", "WFVLWo5B81w", "tg--L9TKL0I", "zvfzhFAaET8", "B13s_m2zXnc", "cpE_s5K4J4g", "vaNLKW_vkEg", "I8lW6buDGBY", "ylbPGQh1mks", "xYZXTQX_wXE", "Je92BEAZh00", "sM34lfjEos4", "zQlm99BajH4", "skyiiabNBQk", "7idJzEPZq1I", "3DqCMBJiSzE", "n5Yh04dJOKc", "jXjfzMCbaBc", "A0Fp0MCgYQY", "8qQUphWkFws", "QWaCsteIYig", "-PvjOQuiTVM", "YIi_MGNW6Q0", "uXIsTszCjZE", "bn5NRw0tsxQ", "hv3RpsjOQ0c", "Gyg8V1vw0Ko", "OlikdeVHT4g", "iyGkACm4zmo", "sT_-Vn6tZgA", "D3Cxm_HIiMU", "mu5IoxwU6aI", "yy3LeyJ8upg", "Qd-whbRDMvA", "pl8J5vBF5zg", "EpsiSc-IT4A", "rS0aFhjBct4", "GnJsI6vq_9Y", "BdHCp62jC84", "fmMY569no2k", "Ldh6FKavxek", "MiS4dXOnqsw", "CgUCLkBwAak", "Lxf5EGVyjOw", "jjxQLHlu95I", "bUL8NQy-3gw", "TIjz0NpfpU0", "2V1uJEqJZ3U", "h8l84GLG-lI", "d3gh9l37Yt8", "F_ALDLJHi58", "wL6jh9thk8Q", "yiaTqfE_qT4", "bXjy0pnEDCc", "Xvg2b5l4Zj0", "jEcNIaQ69b4", "X-jdl9hcCeg", "L0DN5myCP7I", "enuOArEfqGo", "Yo98PdmGzvo", "QW9sxtRo9rI", "pm8AF_mLk_A", "3pCGU3bIPEc", "t-uQe11OIfo", "G-MVReDrRwo", "GUXa-ByKCkc", "8gQbgyTlS-8", "geUKI-2uWaY", "XNwPhlNeC9I", "zQQQ1W-ELCo", "axnHz5iPYCk", "AudPmaQe9AM", "9jeYLvhzTB8", "ojOeHGalej0", "orV8GebjuaM", "TV_0GudS3N8", "Uc9hQGqV-DU", "9D-TPe_KlM8", "1mlN0yuxoLE", "U6DG9dyvvJQ", "kuUZYUBHryw", "257mEsu8lXg", "UFFf3QVaU9Y", "xWwRpX3cfX0", "JWYQ1FnuS5s", "ZjuzJODdH8Q", "0StWrXoN8nI", "HGFUR7WmFP0", "FOOsgpHEe_c", "avP9JR0N-i8", "k4H_WO6kNZA", "Al7DqK0f8lI", "RXXMJAU6vY8", "Stkh4llwdQw", "TbblBA4oqTY", "4yrYeIlk9ak", "ECGb_jy1QE8", "fPAWKKsWtps", "SPLTjaMZMSQ", "yXiSWPGy_gg", "ETI8p1-TUyk", "FsNZ5y6ttf0", "3iObhouMqjI", "EvqCrZMAilM", "pf2sbjYMIG8", "EDuuuVcmLnM", "27_xEN5srVI", "NVMu6LJZU8s", "Ikp-RHiUC18", "OZoe9WqgMNc", "QObUR4uDzrI", "sVjwk87owT4", "USAcFdvY1_0", "T4OXQsnpuqw", "1hnTAg6mDzo", "z4Vu0e49fr8", "OWPVzlrzgKQ", "fq_uuwUjdSk", "cD_QyL0IxJ0", "8idegBmfzS8", "voksbL5ZjB0", "_6cV0WWEeBw", "5DVMuaXjdK4", "djlu9hhL8aU", "jJLSWygShfc", "LEF1nkKYeVg", "FSfQF07YxZ8", "kOeX5kuW2gQ", "MDwPXRy9IFc", "db90YDNjnWM", "W9gLi96pUj4", "_bf-fUEjBNI", "yCn-YTti1M0", "AAsvvzQK1cE", "DXmwu2_B8ro", "CMx1YEvLm20", "gqK2RGBhel8", "0Sx9wOtlARU", "DJ4hDppP_SQ", "F-zQOAwSuHg", "MuMeiN2Ordg", "kUsxMXwCW8A", "01tpRQafgEs", "_y0sGezNX_w", "GR9RFDPrHyY", "An6cuIMTgxo", "5j7m5zuhejQ", "yaE15-5Ebvs", "L1GYRZ2FXv8", "NbFEgxve8bQ", "EVgVdCrJGgc", "6jUMjRwKyOM", "koDI8Al2sqU", "OhGJGUKh21E", "adXmM-eqwz8", "jO2T4KOccH0", "lgpjJHfx2h8", "sX6VAfICbcc", "mzqbGLAGJHw", "4KOnxMXGBaI", "Lj340AVd-8k", "pxOctVwE8rs", "5Jcke69GIws", "3zLvByt52go"];
+
+// ==========================================
+// 2. VECTOR MATH HELPERS
+// ==========================================
+function normalizeVector(vec) {
+    let mag = Math.sqrt(vec.reduce((sum, val) => sum + val * val, 0));
+    return mag === 0 ? vec : vec.map(val => val / mag);
+}
+
+// Categories get distinct, strong vectors (-1 to 1)
+function generateBaseVector() {
+    return normalizeVector(Array.from({length: DIMENSIONS}, () => (Math.random() * 2) - 1));
+}
+
+function addNoise(vec, amount = 0.2) {
+    return normalizeVector(vec.map(val => val + ((Math.random() * 2 - 1) * amount)));
+}
+
+function dotProduct(vecA, vecB) { 
+    return vecA.reduce((sum, val, i) => sum + (val * vecB[i]), 0); 
+}
+
+function getMagnitude(vec) { 
+    return Math.sqrt(vec.reduce((sum, val) => sum + val * val, 0)); 
+}
+
+// Calculate Swipe Velocity (Vs)
+function calculateVs() {
+    if (swipeHistory.length < 2) return 5.0; 
+    let totalTime = 0;
+    for(let i=1; i < swipeHistory.length; i++) { totalTime += (swipeHistory[i] - swipeHistory[i-1]); }
+    return (totalTime / (swipeHistory.length - 1)) / 1000; 
+}
+
+// ==========================================
+// 3. INITIALIZATION (USER & DATABASE)
+// ==========================================
+// User starts "neutral" (-0.1 to 0.1) so the algorithm MUST learn them
+let userVector = normalizeVector(
+    Array.from({ length: DIMENSIONS }, () => (Math.random() * 0.2) - 0.1)
+);
+
+const CATEGORIES = {
+    "Comedy": generateBaseVector(), "Knowledge": generateBaseVector(), "Lifestyle": generateBaseVector(),
+    "Action": generateBaseVector(), "Creation": generateBaseVector(), "Commentary" : generateBaseVector(),
+    "Gaming" : generateBaseVector(), "Narrative" : generateBaseVector(), "Wellness" : generateBaseVector()
+};
+
+let catKeys = Object.keys(CATEGORIES);
+let videoDatabase = []; 
+
+// Change the loop to run for the exact length of your massive array
+for(let i=0; i < yt_ids.length; i++) {
+    
+    // This evenly distributes your 8 categories across all 3000 videos
+    let cat = catKeys[i % catKeys.length]; 
+    
+    videoDatabase.push({
+        id: i, 
+        yt_id: yt_ids[i],
+        title: `${cat} discovery clip #${i + 1}`,
+        category: cat,
+        vector: addNoise(CATEGORIES[cat], 0.3), 
+        seen: false
+    });
+}
+
+console.log(`Successfully loaded ${videoDatabase.length} videos into the algorithm!`);
+
+// ==========================================
+// 4. CORE ALGORITHM LOGIC
+// ==========================================
+function processSwipe(Vw) {
+    if (currentVideoIndex === -1) return false; 
+    
+    let now = Date.now();
+    swipeHistory.push(now);
+    if (swipeHistory.length > 10) swipeHistory.shift(); 
+
+    let Vs = calculateVs();
+    let Vi = videoDatabase[currentVideoIndex].vector;
+
+    // ==========================================
+    // 1. THE AUTO-TUNER (Dynamic Addiction Logic)
+    // ==========================================
+    
+    // Calculate Filter Bubble Risk silently
+    let affinities = catKeys.map(cat => dotProduct(userVector, CATEGORIES[cat]));
+    affinities.sort((a, b) => b - a); // Sort highest to lowest
+    let bubbleRisk = (affinities[0] - affinities[1]) * 100;
+
+    // Tune Alpha (Learning Rate) based on Watch Time
+    if (Vw < 3.0) {
+        ALPHA = 35; // Impatient: Scramble to find a hook!
+    } else if (Vw >= 10.0) {
+        ALPHA = 8;  // Binging: Lock in and stabilize the feed.
+    } else {
+        ALPHA = 15; // Casual: Return to baseline.
+    }
+
+    // Tune Rabbit Hole Threshold based on Bubble Risk
+    if (bubbleRisk > 60) {
+        RH_THRESHOLD = 3.0; // Trapped: Make it easy to break out.
+    } else if (bubbleRisk < 20) {
+        RH_THRESHOLD = 8.0; // Varied: Let them enjoy their niches safely.
+    } else {
+        RH_THRESHOLD = 5.0; // Baseline.
+    }
+
+    // Move the sliders on the dashboard so you can watch the AI "think"
+    if(document.getElementById('set-alpha')) {
+        document.getElementById('set-alpha').value = ALPHA;
+        document.getElementById('val-alpha').innerText = ALPHA;
+    }
+    if(document.getElementById('set-rh')) {
+        document.getElementById('set-rh').value = RH_THRESHOLD;
+        document.getElementById('val-rh').innerText = RH_THRESHOLD.toFixed(1);
+    }
+
+    // ==========================================
+    // 2. CORE MATH & VECTOR UPDATES
+    // ==========================================
+    
+    let diffVector = userVector.map((u, i) => u - Vi[i]);
+    
+    // Calculate Rabbit Hole using the freshly tuned RH_THRESHOLD
+    let Rh = getMagnitude(diffVector.map(val => Math.tanh(val))) * Vw;
+    let isRabbitHole = Rh > RH_THRESHOLD;
+
+    // Update Telemetry UI
+    document.getElementById('stat-vw').innerText = Vw.toFixed(1) + 's';
+    document.getElementById('stat-vs').innerText = Vs.toFixed(1) + 's';
+    document.getElementById('stat-rh').innerText = Rh.toFixed(2);
+    
+    document.getElementById('stat-state').innerText = isRabbitHole ? "EXPLORATION" : "EXPLOITATION";
+    document.getElementById('stat-state').style.color = isRabbitHole ? "#00ffcc" : "#ff0050";
+
+    // Drag the user vector using the freshly tuned ALPHA
+    let denominator = Math.tanh(Math.abs(Vs)) + 2;
+    for(let d=0; d < DIMENSIONS; d++) {
+        userVector[d] += ALPHA * Math.tanh((Vw * (Vi[d] - userVector[d])) / denominator); 
+    }
+
+    userVector = normalizeVector(userVector);
+    updateAffinityDisplay();
+    
+    return isRabbitHole;
+}
+
+function recommendNextVideo(isRabbitHole) {
+    let unseenVideos = videoDatabase.filter(v => !v.seen);
+    if (unseenVideos.length === 0) {
+        videoDatabase.forEach(v => v.seen = false); // Reset if we run out
+        unseenVideos = videoDatabase;
+    }
+
+    totalSwipes++;
+    let bestVideo = null;
+    let highestScore = -Infinity;
+
+    // --- COLD START & RANDOM INJECTION ---
+    let isColdStart = totalSwipes <= 8;
+    let injectRandom = isColdStart ? (Math.random() < 0.70) : (Math.random() < 0.15);
+
+    if (injectRandom) {
+        bestVideo = unseenVideos[Math.floor(Math.random() * unseenVideos.length)];
+    } 
+    else {
+        // --- REAL-TIME FATIGUE TRACKING ---
+        let baseVector = isRabbitHole ? videoDatabase[currentVideoIndex].vector : userVector;
+
+        unseenVideos.forEach(v => {
+            let score = dotProduct(baseVector, v.vector);
+            
+            // Check short-term memory (Filter Bubble Prevention)
+            let recentCount = recentCategories.filter(c => c === v.category).length;
+            if (recentCount >= 3) score -= 1.0; // Hard penalty 
+            else if (recentCount === 2) score -= 0.3; // Soft penalty
+
+            if (score > highestScore) { highestScore = score; bestVideo = v; }
+        });
+    }
+
+    // Update Memory
+    recentCategories.push(bestVideo.category);
+    if (recentCategories.length > 5) recentCategories.shift(); 
+
+    // --- LOAD VIDEO ---
+    bestVideo.seen = true;
+    currentVideoIndex = videoDatabase.indexOf(bestVideo);
+    
+    let muteParam = isMuted ? 1 : 0;
+    document.getElementById('yt-player').src = `https://www.youtube.com/embed/${bestVideo.yt_id}?autoplay=1&controls=0&mute=${muteParam}&loop=1&playlist=${bestVideo.yt_id}&playsinline=1&modestbranding=1`;
+    document.getElementById('video-info').innerText = bestVideo.title;
+    document.getElementById('video-cat').innerText = `#${bestVideo.category.toLowerCase()}`;
+    
+    currentVideoStartTime = Date.now();
+}
+
+// ==========================================
+// 5. UI & INTERACTION CONTROLS
+// ==========================================
+function triggerNext() {
+    if (isMuted) {
+        isMuted = false;
+        if(document.getElementById('interaction-hint')) document.getElementById('interaction-hint').style.opacity = '0';
+    }
+
+    const wrapper = document.getElementById('video-wrapper');
+    if(wrapper) {
+        wrapper.classList.remove('swipe-anim');
+        void wrapper.offsetWidth; 
+        wrapper.classList.add('swipe-anim');
+    }
+
+    let Vw = (Date.now() - currentVideoStartTime) / 1000;
+
+    if (currentVideoIndex !== -1) {
+        videoHistory.push(currentVideoIndex); // Save to history
+    }
+
+    let isRabbitHole = processSwipe(Vw);
+    setTimeout(() => { recommendNextVideo(isRabbitHole); }, 200);
+}
+
+function triggerBack() {
+    if (videoHistory.length === 0) return; // Nowhere to go back to
+
+    const wrapper = document.getElementById('video-wrapper');
+    if(wrapper) {
+        wrapper.classList.remove('swipe-anim');
+        void wrapper.offsetWidth;
+        wrapper.classList.add('swipe-anim'); 
+    }
+
+    let prevIndex = videoHistory.pop();
+    
+    setTimeout(() => {
+        currentVideoIndex = prevIndex;
+        let prevVideo = videoDatabase[currentVideoIndex];
+        
+        let muteParam = isMuted ? 1 : 0;
+        document.getElementById('yt-player').src = `https://www.youtube.com/embed/${prevVideo.yt_id}?autoplay=1&controls=0&mute=${muteParam}&loop=1&playlist=${prevVideo.yt_id}&playsinline=1&modestbranding=1`;
+        
+        document.getElementById('video-info').innerText = prevVideo.title;
+        document.getElementById('video-cat').innerText = `#${prevVideo.category.toLowerCase()}`;
+        
+        currentVideoStartTime = Date.now();
+    }, 200);
+}
+
+// Keyboard
+const keysPressed = new Set();
+document.addEventListener('keydown', (e) => {
+    if (['Space', 'ArrowDown', 'ArrowRight'].includes(e.code)) {
+        e.preventDefault(); triggerNext();
+    }
+    if (e.code === 'ArrowUp') {
+        e.preventDefault(); triggerBack();
+    }
+    
+    // DEV Dashboard Toggle (D + E + V)
+    keysPressed.add(e.key.toLowerCase());
+    if (keysPressed.has('d') && keysPressed.has('e') && keysPressed.has('v')) {
+        let devPanel = document.getElementById('dev-dashboard');
+        if(devPanel) devPanel.classList.toggle('show');
+        keysPressed.clear();
+    }
+});
+document.addEventListener('keyup', (e) => { keysPressed.delete(e.key.toLowerCase()); });
+
+// Mouse Wheel (Debounced)
+let scrollCooldown = false;
+document.addEventListener('wheel', (e) => {
+    if (scrollCooldown) return;
+    if (e.deltaY > 40) {
+        triggerNext(); activateScrollCooldown();
+    } else if (e.deltaY < -40) {
+        triggerBack(); activateScrollCooldown();
+    }
+}, { passive: false });
+
+function activateScrollCooldown() {
+    scrollCooldown = true;
+    setTimeout(() => { scrollCooldown = false; }, 800);
+}
+
+// Touch & Drag
+let startY = 0; let isDragging = false;
+document.addEventListener('touchstart', e => { startY = e.changedTouches[0].screenY; }, {passive: true});
+document.addEventListener('touchend', e => {
+    if (startY - e.changedTouches[0].screenY > 50) triggerNext();
+}, {passive: true});
+
+document.addEventListener('mousedown', e => { isDragging = true; startY = e.clientY; });
+document.addEventListener('mouseup', e => { 
+    if(isDragging) { 
+        if (startY - e.clientY > 50 || isMuted) triggerNext(); 
+        isDragging = false; 
+    }
+});
+
+// ==========================================
+// 6. DASHBOARD, SETTINGS & YOUTUBE API
+// ==========================================
+function updateSettings() {
+    let homeToggle = document.getElementById('home-mode');
+    if (homeToggle) isHomeMode = homeToggle.checked;
+}
+
+// Called by YouTube API if an embed is blocked/restricted
+function onPlayerError(event) {
+    if ([101, 150, 153].includes(event.data) && !isHomeMode) {
+        console.log("Restricted video skipped.");
+        recommendNextVideo(false); // Skip without punishing the user vector
+    }
+}
+
+document.getElementById('set-alpha')?.addEventListener('input', (e) => {
+    ALPHA = parseFloat(e.target.value);
+    document.getElementById('val-alpha').innerText = ALPHA;
+});
+
+document.getElementById('set-rh')?.addEventListener('input', (e) => {
+    RH_THRESHOLD = parseFloat(e.target.value);
+    document.getElementById('val-rh').innerText = RH_THRESHOLD;
+});
+
+function updateAffinityDisplay() {
+    let affinities = [];
+    catKeys.forEach(cat => { affinities.push({cat: cat, score: dotProduct(userVector, CATEGORIES[cat])}); });
+    affinities.sort((a, b) => b.score - a.score); 
+    
+    let html = "";
+    affinities.forEach(a => {
+        let percent = Math.max(0, (a.score * 100)).toFixed(1);
+        html += `<div class="stat-row"><span>${a.cat}:</span> <span>${percent}%</span></div>`;
+    });
+    let affinityEl = document.getElementById('user-affinity');
+    if(affinityEl) affinityEl.innerHTML = html;
+}
+
+// --- BOOT UP ---
+updateAffinityDisplay();
+recommendNextVideo(false);
