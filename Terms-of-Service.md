@@ -1,6 +1,6 @@
 # **YipYap – Terms of Service**
 
-**Effective Date:** *now*
+**Effective Date:** Mar/25/2026
 
 ## **1. Acceptance of Terms**
 

@@ -13,11 +13,10 @@ body {
     display: flex; 
     height: 100vh; 
     overflow: hidden;
-    touch-action: none; /* Prevents default browser scrolling */
+    touch-action: none;
     user-select: none;
 }
 
-/* Mobile-style Feed */
 .feed-container {
     flex: 1; 
     display: flex; 
@@ -40,7 +39,6 @@ body {
     will-change: transform;
 }
 
-/* TikTok Swipe Animation */
 .swipe-anim {
     animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }

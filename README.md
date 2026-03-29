@@ -1,6 +1,7 @@
 # YipYap
 
-Press the *space* key to "commit"
+Press the *space* key to go down in the videos
+Real Time Video-feedback-Loop!
 
 *Warning!* This is in pre-release! prone to bugs and server errors!
 

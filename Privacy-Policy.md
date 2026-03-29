@@ -1,6 +1,6 @@
 # **YipYap – Privacy Policy**
 
-**Effective Date:** *now*
+**Effective Date:** Mar/25/2026
 
 ## **1. Overview**
 
@@ -50,12 +50,9 @@ We keep your information only as long as necessary to operate the Service and me
 ## **7. Your Rights**
 
 Depending on your location, you may be able to:
-
 * Access your data
 * Request corrections
 * Request deletion
-
-Contact us at: **[Insert Contact Email]**
 
 ## **8. Children’s Privacy**
 
@@ -65,14 +62,9 @@ YipYap is not intended for children under 13. If we learn that we have collected
 
 We may update this Privacy Policy. If changes are significant, we will notify users.
 
-## **10. Contact**
-
-For questions or concerns, contact:
-**[Insert Contact Email]**
-
 ---
 
-# **Community Guidelines (Quick Version)**
+# **Community Guidelines**
 
 To keep YipYap safe and enjoyable:
 

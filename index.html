@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YipYap | feed</title>
+    <title>YipYap | home</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
             <div class="swipe-hint" id="interaction-hint">Swipe Up or Click to Start/Unmute</div>
             <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
             <div class="overlay-controls">
-                <div class="author">@algo_feed</div>
-                <div id="video-info">Loading content...</div>
+                <div class="author">@YipYap</div>
+                <div id="video-info">Loading...</div>
                 <div id="video-cat">#category</div>
             </div>
         </div>
@@ -22,9 +22,9 @@
         <div>
             <h2>Real-Time Telemetry</h2>
             <div class="stat-box">
-                <div class="stat-row"><span>Watch Time (Vw):</span> <span id="stat-vw">0.0s</span></div>
-                <div class="stat-row"><span>Swipe Vel. (Vs):</span> <span id="stat-vs">0.0s</span></div>
-                <div class="stat-row"><span>Rabbit Hole (Rh):</span> <span id="stat-rh">0.00</span></div>
+                <div class="stat-row"><span>Watch Time (V_{w}):</span> <span id="stat-vw">0.0s</span></div>
+                <div class="stat-row"><span>Swipe Vel. (V_{s}):</span> <span id="stat-vs">0.0s</span></div>
+                <div class="stat-row"><span>Rabbit Hole (R_{h}):</span> <span id="stat-rh">0.00</span></div>
                 <div class="stat-row"><span>State:</span> <span id="stat-state" class="highlight">EXPLOITATION</span></div>
             </div>
         </div>
@@ -40,7 +40,7 @@
             </div>
         </div>
         <div>
-            <h2>User Affinity Vector</h2>
+            <h2>User Vector Rates</h2>
             <div class="stat-box" id="user-affinity">
                 Swiping calibrates the vector...
             </div>
