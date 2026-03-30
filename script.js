@@ -81,76 +81,72 @@ for(let i=0; i < yt_ids.length; i++) {
 }
 
 console.log(`Successfully loaded ${videoDatabase.length} videos into the algorithm!`);
-
+const uiYtPlayer = document.getElementById('yt-player');
+const uiVideoInfo = document.getElementById('video-info');
+const uiVideoCat = document.getElementById('video-cat');
+let unseenIndices = Array.from({ length: videoDatabase.length }, (_, i) => i);
 function processSwipe(Vw) {
-    if (currentVideoIndex === -1) return false; 
-    
+    if (currentVideoIndex === -1) return false;
+
     let now = Date.now();
     swipeHistory.push(now);
-    if (swipeHistory.length > 10) swipeHistory.shift(); 
+    if (swipeHistory.length > 10) swipeHistory.shift();
 
     let Vs = calculateVs();
-    let Vi = videoDatabase[currentVideoIndex].vector;
-    let affinities = catKeys.map(cat => dotProduct(userVector, CATEGORIES[cat]));
-    affinities.sort((a, b) => b - a);
-    let bubbleRisk = (affinities[0] - affinities[1]) * 100;
-
+    let video = videoDatabase[currentVideoIndex];
+    let Vi = video.vector;
+    let currentAffinity = dotProduct(userVector, Vi);
+    let affinities = catKeys.map(cat => ({
+        name: cat,
+        score: dotProduct(userVector, CATEGORIES[cat])
+    }));
+    affinities.sort((a, b) => b.score - a.score);
+    
+    let bubbleRisk = (affinities[0].score - affinities[1].score) * 100;
     if (Vw < 3.0) {
-        ALPHA = 35;
+        ALPHA = 35; 
     } else if (Vw >= 10.0) {
         ALPHA = 8;
     } else {
         ALPHA = 15;
     }
 
-    if (bubbleRisk > 60) {
-        RH_THRESHOLD = 3.0;
-    } else if (bubbleRisk < 20) {
-        RH_THRESHOLD = 8.0;
-    } else {
-        RH_THRESHOLD = 5.0;
-    }
-
-    if(document.getElementById('set-alpha')) {
-        document.getElementById('set-alpha').value = ALPHA;
-        document.getElementById('val-alpha').innerText = ALPHA;
-    }
-    if(document.getElementById('set-rh')) {
-        document.getElementById('set-rh').value = RH_THRESHOLD;
-        document.getElementById('val-rh').innerText = RH_THRESHOLD.toFixed(1);
-    }
-    
     let diffVector = userVector.map((u, i) => u - Vi[i]);
     let Rh = getMagnitude(diffVector.map(val => Math.tanh(val))) * Vw;
     let isRabbitHole = Rh > RH_THRESHOLD;
 
-    document.getElementById('stat-vw').innerText = Vw.toFixed(1) + 's';
-    document.getElementById('stat-vs').innerText = Vs.toFixed(1) + 's';
-    document.getElementById('stat-rh').innerText = Rh.toFixed(2);
-    document.getElementById('stat-state').innerText = isRabbitHole ? "EXPLORATION" : "EXPLOITATION";
-    document.getElementById('stat-state').style.color = isRabbitHole ? "#00ffcc" : "#ff0050";
+    console.group(`%cAlgorithm Analysis: Video #${video.id} `, 'background: #111; color: #00ffcc; font-weight: bold; padding: 4px;');
+    console.log(`%cWatch Time: %c${Vw.toFixed(2)}s`, 'color: #888', 'color: #fff; font-weight: bold');
+    console.log(`%cCurrent Match: %c${(currentAffinity * 100).toFixed(1)}%`, 'color: #888', 'color: #ff0050; font-weight: bold');
+    console.log(`%cTop Interest: %c${affinities[0].name} (${(affinities[0].score * 100).toFixed(1)}%)`, 'color: #888', 'color: #00ffcc');
+    console.log(`%cBubble Risk: %c${bubbleRisk.toFixed(1)}%`, 'color: #888', `color: ${bubbleRisk > 50 ? '#ff0050' : '#aaa'}`);
+    console.log(`%cState: %c${isRabbitHole ? 'EXPLORATION (Finding New)' : 'EXPLOITATION (Staying Put)'}`, 'color: #888', `color: ${isRabbitHole ? '#00ffcc' : '#ff0050'}; font-weight: bold`);
+    console.groupEnd();
 
     let denominator = Math.tanh(Math.abs(Vs)) + 2;
-    for(let d=0; d < DIMENSIONS; d++) {
-        userVector[d] += ALPHA * Math.tanh((Vw * (Vi[d] - userVector[d])) / denominator); 
+    for (let d = 0; d < DIMENSIONS; d++) {
+        userVector[d] += ALPHA * Math.tanh((Vw * (Vi[d] - userVector[d])) / denominator);
     }
 
     userVector = normalizeVector(userVector);
-    updateAffinityDisplay();
     
+    if (document.getElementById('stat-vw')) document.getElementById('stat-vw').innerText = Vw.toFixed(1) + 's';
+    if (document.getElementById('stat-vs')) document.getElementById('stat-vs').innerText = Vs.toFixed(1) + 's';
+    if (document.getElementById('stat-rh')) document.getElementById('stat-rh').innerText = Rh.toFixed(2);
+    if (document.getElementById('stat-state')) {
+        document.getElementById('stat-state').innerText = isRabbitHole ? "EXPLORATION" : "EXPLOITATION";
+        document.getElementById('stat-state').style.color = isRabbitHole ? "#00ffcc" : "#ff0050";
+    }
+
+    updateAffinityDisplay();
     return isRabbitHole;
 }
 
-const uiYtPlayer = document.getElementById('yt-player');
-const uiVideoInfo = document.getElementById('video-info');
-const uiVideoCat = document.getElementById('video-cat');
-let unseenIndices = Array.from({ length: videoDatabase.length }, (_, i) => i);
-
 function recommendNextVideo(isRabbitHole) {
     if (unseenIndices.length === 0) {
-        console.log("Database exhausted! Resetting unseen pool...");
+        console.log("%c EXHAUSTED: Resetting video pool...", "color: orange");
         unseenIndices = Array.from({ length: videoDatabase.length }, (_, i) => i);
-        videoDatabase.forEach(v => v.seen = false); 
+        videoDatabase.forEach(v => v.seen = false);
     }
 
     totalSwipes++;
@@ -160,53 +156,51 @@ function recommendNextVideo(isRabbitHole) {
     let injectRandom = isColdStart ? (Math.random() < 0.70) : (Math.random() < 0.15);
     let batchSize = Math.min(1000, unseenIndices.length);
     let candidates = [];
-    
+
     for (let i = 0; i < batchSize; i++) {
         let randomIndex = Math.floor(Math.random() * (unseenIndices.length - i));
         let candidateIndex = unseenIndices[randomIndex];
         candidates.push(videoDatabase[candidateIndex]);
-        let temp = unseenIndices[randomIndex];
-        unseenIndices[randomIndex] = unseenIndices[unseenIndices.length - 1 - i];
-        unseenIndices[unseenIndices.length - 1 - i] = temp;
     }
 
+    let decisionReason = "";
     if (injectRandom) {
         bestVideo = candidates[Math.floor(Math.random() * candidates.length)];
+        decisionReason = "RANDOM (Preventing Boredom)";
     } else {
         let baseVector = isRabbitHole ? videoDatabase[currentVideoIndex].vector : userVector;
-        for (let i = 0; i < candidates.length; i++) {
-            let v = candidates[i];
+        decisionReason = isRabbitHole ? "RABBIT HOLE (Following a lead)" : "🎯 PERSONALIZED (Matching interests)";
+        for (let v of candidates) {
             let score = dotProduct(baseVector, v.vector);
-            let recentCount = 0;
-            for (let c = 0; c < recentCategories.length; c++) {
-                if (recentCategories[c] === v.category) recentCount++;
-            }
-            
-            if (recentCount >= 3) score -= 1.0; 
-            else if (recentCount === 2) score -= 0.3;
-            if (score > highestScore) { 
-                highestScore = score; 
-                bestVideo = v; 
+            let recentCount = recentCategories.filter(c => c === v.category).length;
+            if (recentCount >= 3) score -= 1.5; 
+            else if (recentCount === 2) score -= 0.5;
+            if (score > highestScore) {
+                highestScore = score;
+                bestVideo = v;
             }
         }
     }
 
+    console.log(`%cNEXT VIDEO: ${bestVideo.title} `, 'background: #ff0050; color: white; font-weight: bold;');
+    console.log(`%cReason: %c${decisionReason}`, 'color: #888', 'color: #fff');
+    console.log(`%cCategory: %c#${bestVideo.category}`, 'color: #888', 'color: #aaa');
+
     recentCategories.push(bestVideo.category);
-    if (recentCategories.length > 5) recentCategories.shift(); 
+    if (recentCategories.length > 5) recentCategories.shift();
 
     bestVideo.seen = true;
     currentVideoIndex = bestVideo.id;
-
     unseenIndices = unseenIndices.filter(index => index !== currentVideoIndex);
-    let muteParam = (typeof isMuted !== 'undefined' && isMuted) ? 1 : 0;
-    
+    let muteParam = isMuted ? 1 : 0;
+    const uiYtPlayer = document.getElementById('yt-player');
     if (uiYtPlayer) {
         uiYtPlayer.src = `https://www.youtube.com/embed/${bestVideo.yt_id}?autoplay=1&controls=0&mute=${muteParam}&loop=1&playlist=${bestVideo.yt_id}&playsinline=1&modestbranding=1`;
     }
 
-    if (uiVideoInfo) uiVideoInfo.innerText = bestVideo.title;
-    if (uiVideoCat) uiVideoCat.innerText = `#${bestVideo.category.toLowerCase()}`;
-    
+    if (document.getElementById('video-info')) document.getElementById('video-info').innerText = bestVideo.title;
+    if (document.getElementById('video-cat')) document.getElementById('video-cat').innerText = `#${bestVideo.category.toLowerCase()}`;
+
     currentVideoStartTime = Date.now();
 }
 
@@ -297,6 +291,14 @@ document.addEventListener('touchend', e => {
     if (startY - e.changedTouches[0].screenY > 50) triggerNext();
 }, {passive: true});
 
+document.addEventListener('touchend', e => {
+    let endY = e.changedTouches[0].screenY;
+    let swipeDistance = startY - endY;
+    if (swipeDistance > 50 || currentVideoIndex === -1) {
+        triggerNext();
+    }
+}, { passive: true });
+
 document.addEventListener('mousedown', e => { isDragging = true; startY = e.clientY; });
 document.addEventListener('mouseup', e => { 
     if(isDragging) { 
@@ -320,7 +322,7 @@ function onPlayerError(event) {
 document.getElementById('set-alpha')?.addEventListener('input', (e) => {
     ALPHA = parseFloat(e.target.value);
     document.getElementById('val-alpha').innerText = ALPHA;
-}); player
+});
 
 document.getElementById('set-rh')?.addEventListener('input', (e) => {
     RH_THRESHOLD = parseFloat(e.target.value);
@@ -345,6 +347,8 @@ updateAffinityDisplay();
 document.body.addEventListener('click', function startApp() {
     if (currentVideoIndex === -1) {
         isMuted = false;
+        const hint = document.getElementById('interaction-hint');
+        if (hint) hint.style.opacity = '0';
         recommendNextVideo(false);
         document.body.removeEventListener('click', startApp);
     }
