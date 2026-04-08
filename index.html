@@ -7,29 +7,71 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="feed-container" id="swipe-area">
+    <header class="top-bar">
+        <button id="btn-settings" class="icon-btn" title="Settings">⚙️</button>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search topics...">
+            <button id="btn-search" class="icon-btn">🔍</button>
+        </div>
+        <button id="btn-dev" class="icon-btn" title="Dev Tools">🛠️</button>
+    </header>
+
+    <main class="feed-container" id="swipe-area">
         <div class="video-wrapper" id="video-wrapper">
-            <div class="swipe-hint" id="interaction-hint">Swipe Up or Click to Start/Unmute</div>
+            <div class="swipe-hint" id="interaction-hint">Swipe Up or Click to Start</div>
+            <div id="empty-state" style="display: none; position: absolute; top: 50%; width: 100%; text-align: center; z-index: 10;">No videos found.</div>
+            
             <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-            <div class="overlay-controls">
-                <div class="author">@YipYap</div>
-                <div id="video-info">Loading...</div>
-                <div id="video-cat">#category</div>
+            
+            <div class="overlay-controls" id="overlay">
+                <div class="info-area">
+                    <div class="author">@YipYap</div>
+                    <div id="video-info">Loading...</div>
+                    <div id="video-cat">#category</div>
+                </div>
+
+                <div class="interaction-sidebar">
+                    <button id="btn-like" class="action-btn" title="Like">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                    </button>
+                    <button id="btn-dislike" class="action-btn" title="Dislike">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="dashboard" id="dev-dashboard">
-        <div>
-            <h2>Real-Time Telemetry</h2>
+    </main>
+
+    <aside class="side-panel" id="settings-panel">
+        <div class="panel-header">
+            <h2>User Settings</h2>
+            <button class="close-btn" data-target="settings-panel">✖</button>
+        </div>
+        <div class="panel-content">
+            <div class="control-group">
+                <label>Appearance</label>
+                <button id="btn-theme-toggle" class="ui-btn">Switch to Light Mode</button>
+            </div>
+            <div class="control-group">
+                <label>Algorithm Management</label>
+                <button id="btn-reset-feed" class="ui-btn danger-btn">Reset My Feed</button>
+                <p class="help-text">This will erase your watch history and personalized algorithm profile.</p>
+            </div>
+        </div>
+    </aside>
+
+    <aside class="side-panel" id="dev-dashboard">
+        <div class="panel-header">
+            <h2>Dev Telemetry</h2>
+            <button class="close-btn" data-target="dev-dashboard">✖</button>
+        </div>
+        <div class="panel-content">
             <div class="stat-box">
-                <div class="stat-row"><span>Watch Time (V_{w}):</span> <span id="stat-vw">0.0s</span></div>
-                <div class="stat-row"><span>Swipe Vel. (V_{s}):</span> <span id="stat-vs">0.0s</span></div>
-                <div class="stat-row"><span>Rabbit Hole (R_{h}):</span> <span id="stat-rh">0.00</span></div>
+                <div class="stat-row"><span>Watch Time (Vw):</span> <span id="stat-vw">0.0s</span></div>
+                <div class="stat-row"><span>Swipe Vel. (Vs):</span> <span id="stat-vs">0.0s</span></div>
+                <div class="stat-row"><span>Rabbit Hole (Rh):</span> <span id="stat-rh">0.00</span></div>
                 <div class="stat-row"><span>State:</span> <span id="stat-state" class="highlight">EXPLOITATION</span></div>
             </div>
-        </div>
-        <div>
-            <h2>Algorithm Settings</h2>
             <div class="control-group">
                 <label>Alpha Multiplier (<span id="val-alpha">10</span>)</label>
                 <input type="range" id="set-alpha" min="1" max="50" step="1" value="25">
@@ -39,13 +81,8 @@
                 <input type="range" id="set-rh" min="1" max="20" step="0.5" value="5">
             </div>
         </div>
-        <div>
-            <h2>User Vector Rates</h2>
-            <div class="stat-box" id="user-affinity">
-                Swiping calibrates the vector...
-            </div>
-        </div>
-    </div>
+    </aside>
+
     <script src="script.js"></script>
 </body>
 </html>

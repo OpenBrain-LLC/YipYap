@@ -8,3 +8,12 @@ Real Time Video-feedback-Loop!
 links:
 * Terms of Service: `Terms-of-Service.md`
 * Privacy Policy: `Privacy-Policy.md`
+
+## Updates
+### v0.1
+whats new
+* Likes/Dislikes
+* Settings
+* DEV tools
+* better algorithm
+* Bug Fixes
