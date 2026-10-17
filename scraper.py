@@ -1,476 +1,145 @@
 #!/usr/bin/env python3
 """
 scraper.py — scrape YouTube Shorts for a list of queries and/or videos
-             and write them all to video.json
-
-The list lives in QUERIES below. Every entry may be:
-
-  * a search query           -> "cats", "funny dogs"
-  * a YouTube URL            -> "https://www.youtube.com/shorts/VIDEOID"
-                                "https://youtu.be/VIDEOID"
-                                "https://www.youtube.com/watch?v=VIDEOID"
-  * a bare 11-char video id  -> "dQw4w9WgXcQ"
-       (checked with oEmbed first; if it isn't a real video the entry
-        is treated as a search query instead)
+             and APPEND to video.json (skipping videos already present).
 
 Usage:
     python scraper.py                   # uses QUERIES below
     python scraper.py "cats" "dogs" 30  # ad-hoc entries + per-query limit
 """
 
+import concurrent.futures
 import json
+import os
 import re
 import sys
+import threading
 import time
 import urllib.parse
+
 import requests
 
 # ---------------------------------------------------------------- config
 QUERIES: list = [
     # --- Animals & pets ---
-    "funny cats",
-    "cute kittens",
-    "cats being cats",
-    "funny dogs",
-    "cute puppies",
-    "dogs being dogs",
-    "puppy videos",
-    "dog training",
-    "cat training",
-    "pet birds",
-    "parrot talking",
-    "funny parrots",
-    "pet reptiles",
-    "snake videos",
-    "lizard videos",
-    "turtle videos",
-    "fish aquarium",
-    "betta fish",
-    "horses",
-    "horse riding",
-    "farm animals",
-    "baby animals",
-    "wildlife",
-    "animal rescues",
-    "animal facts",
-    "service dogs",
-    "guide dogs",
-    "police dogs",
-    "military dogs",
-    "cats vs dogs",
-    "pet fails",
-    "pet compilation",
+    "funny cats", "cute kittens", "cats being cats", "funny dogs",
+    "cute puppies", "dogs being dogs", "puppy videos", "dog training",
+    "cat training", "pet birds", "parrot talking", "funny parrots",
+    "pet reptiles", "snake videos", "lizard videos", "turtle videos",
+    "fish aquarium", "betta fish", "horses", "horse riding",
+    "farm animals", "baby animals", "wildlife", "animal rescues",
+    "animal facts", "service dogs", "guide dogs", "police dogs",
+    "military dogs", "cats vs dogs", "pet fails", "pet compilation",
     "animal compilation",
 
     # --- Funny & memes ---
-    "funny videos",
-    "funny shorts",
-    "try not to laugh",
-    "funny fails",
-    "fail compilation",
-    "instant karma",
-    "caught on camera",
-    "funny moments",
-    "memes",
-    "dank memes",
-    "funny memes",
-    "cat memes",
-    "dog memes",
-    "animal memes",
-    "school memes",
-    "work memes",
-    "gaming memes",
-    "relatable memes",
-    "comedy skits",
-    "stand up comedy",
-    "pranks",
-    "funny pranks",
-    "public pranks",
-    "social experiments",
-    "awkward moments",
-    "cringe",
-    "cringe compilation",
-    "roast",
-    "roasts",
-    "insults",
-    "comebacks",
-    "dad jokes",
-    "punny jokes",
-    "jokes",
-    "standup",
-    "comedy",
-    "sketch comedy",
-    "impressions",
-    "celebrity impressions",
-    "voice acting",
+    "funny videos", "funny shorts", "try not to laugh", "funny fails",
+    "fail compilation", "instant karma", "caught on camera",
+    "funny moments", "memes", "dank memes", "funny memes", "cat memes",
+    "dog memes", "animal memes", "school memes", "work memes",
+    "gaming memes", "relatable memes", "comedy skits", "stand up comedy",
+    "pranks", "funny pranks", "public pranks", "social experiments",
+    "awkward moments", "cringe", "cringe compilation", "roast", "roasts",
+    "insults", "comebacks", "dad jokes", "punny jokes", "jokes",
+    "standup", "comedy", "sketch comedy", "impressions",
+    "celebrity impressions", "voice acting",
 
     # --- Satisfying & ASMR ---
-    "oddly satisfying",
-    "satisfying video",
-    "satisfying compilation",
-    "asmr",
-    "asmr eating",
-    "asmr no talking",
-    "asmr sounds",
-    "slime",
-    "slime videos",
-    "kinetic sand",
-    "soap cutting",
-    "glass cutting",
-    "hydraulic press",
-    "crushing things",
-    "power washing",
-    "pressure washing",
-    "rug cleaning",
-    "car detailing",
-    "house cleaning",
-    "cleaning hacks",
-    "restoration",
-    "rust removal",
-    "tool restoration",
-    "knife restoration",
-    "furniture restoration",
-    "car restoration",
-    "old things restored",
-    "satisfying repairs",
-    "woodworking",
-    "blacksmithing",
-    "welding",
-    "metalworking",
-    "pottery",
-    "glass blowing",
-    "resin art",
-    "painting",
-    "drawing",
-    "digital art",
-    "calligraphy",
-    "sculpting",
-    "3d printing",
-    "laser cutting",
-    "cnc",
-    "diy",
-    "diy crafts",
-    "life hacks",
-    "5 minute crafts",
-    "kitchen hacks",
-    "home hacks",
-    "organization",
-    "declutter",
-    "minimalism",
-    "home decor",
-    "interior design",
-    "diy furniture",
+    "oddly satisfying", "satisfying video", "satisfying compilation",
+    "asmr", "asmr eating", "asmr no talking", "asmr sounds", "slime",
+    "slime videos", "kinetic sand", "soap cutting", "glass cutting",
+    "hydraulic press", "crushing things", "power washing",
+    "pressure washing", "rug cleaning", "car detailing", "house cleaning",
+    "cleaning hacks", "restoration", "rust removal", "tool restoration",
+    "knife restoration", "furniture restoration", "car restoration",
+    "old things restored", "satisfying repairs", "woodworking",
+    "blacksmithing", "welding", "metalworking", "pottery",
+    "glass blowing", "resin art", "painting", "drawing", "digital art",
+    "calligraphy", "sculpting", "3d printing", "laser cutting", "cnc",
+    "diy", "diy crafts", "life hacks", "5 minute crafts",
+    "kitchen hacks", "home hacks", "organization", "declutter",
+    "minimalism", "home decor", "interior design", "diy furniture",
     "woodworking projects",
 
     # --- Food & cooking ---
-    "cooking",
-    "easy recipes",
-    "quick recipes",
-    "dinner ideas",
-    "breakfast ideas",
-    "lunch ideas",
-    "meal prep",
-    "healthy recipes",
-    "vegan recipes",
-    "keto recipes",
-    "baking",
-    "cake decorating",
-    "dessert recipes",
-    "chocolate",
-    "candy making",
-    "street food",
-    "food review",
-    "mukbang",
-    "chef",
-    "grilling",
-    "bbq",
-    "smoker",
-    "pizza",
-    "burger",
-    "tacos",
-    "sushi",
-    "ramen",
-    "pasta",
-    "coffee",
-    "latte art",
-    "cocktails",
-    "bartender",
-    "mixology",
-    "whiskey",
-    "wine",
-    "beer",
-    "food facts",
-    "kitchen gadgets",
-    "kitchen tools",
+    "cooking", "easy recipes", "quick recipes", "dinner ideas",
+    "breakfast ideas", "lunch ideas", "meal prep", "healthy recipes",
+    "vegan recipes", "keto recipes", "baking", "cake decorating",
+    "dessert recipes", "chocolate", "candy making", "street food",
+    "food review", "mukbang", "chef", "grilling", "bbq", "smoker",
+    "pizza", "burger", "tacos", "sushi", "ramen", "pasta", "coffee",
+    "latte art", "cocktails", "bartender", "mixology", "whiskey",
+    "wine", "beer", "food facts", "kitchen gadgets", "kitchen tools",
 
     # --- Fitness & sports ---
-    "fitness",
-    "workout",
-    "home workout",
-    "gym",
-    "gym motivation",
-    "bodybuilding",
-    "powerlifting",
-    "calisthenics",
-    "crossfit",
-    "yoga",
-    "pilates",
-    "stretching",
-    "mobility",
-    "running",
-    "marathon",
-    "sprinting",
-    "cycling",
-    "swimming",
-    "boxing",
-    "mma",
-    "muay thai",
-    "bjj",
-    "wrestling",
-    "self defense",
-    "karate",
-    "taekwondo",
-    "kung fu",
-    "parkour",
-    "gymnastics",
-    "cheerleading",
-    "dance",
-    "hip hop dance",
-    "breakdance",
-    "ballet",
-    "salsa",
-    "bachata",
-    "tango",
-    "line dance",
-    "country dance",
-    "contortion",
-    "flexibility",
-    "handstands",
-    "football",
-    "soccer",
-    "basketball",
-    "baseball",
-    "tennis",
-    "golf",
-    "cricket",
-    "rugby",
-    "hockey",
-    "volleyball",
-    "badminton",
-    "table tennis",
-    "pickleball",
-    "skateboarding",
-    "snowboarding",
-    "skiing",
-    "bmx",
-    "motocross",
-    "racing",
-    "formula 1",
-    "nascar",
-    "drift",
-    "drag race",
-    "car meet",
+    "fitness", "workout", "home workout", "gym", "gym motivation",
+    "bodybuilding", "powerlifting", "calisthenics", "crossfit", "yoga",
+    "pilates", "stretching", "mobility", "running", "marathon",
+    "sprinting", "cycling", "swimming", "boxing", "mma", "muay thai",
+    "bjj", "wrestling", "self defense", "karate", "taekwondo",
+    "kung fu", "parkour", "gymnastics", "cheerleading", "dance",
+    "hip hop dance", "breakdance", "ballet", "salsa", "bachata",
+    "tango", "line dance", "country dance", "contortion", "flexibility",
+    "handstands", "football", "soccer", "basketball", "baseball",
+    "tennis", "golf", "cricket", "rugby", "hockey", "volleyball",
+    "badminton", "table tennis", "pickleball", "skateboarding",
+    "snowboarding", "skiing", "bmx", "motocross", "racing",
+    "formula 1", "nascar", "drift", "drag race", "car meet",
 
     # --- Cars, tech & gaming ---
-    "car review",
-    "car repair",
-    "engine swap",
-    "motorcycle",
-    "dirt bike",
-    "atv",
-    "truck",
-    "offroad",
-    "overlanding",
-    "van life",
-    "rv life",
-    "supercars",
-    "luxury cars",
-    "electric cars",
-    "tesla",
-    "car fails",
-    "dashcam",
-    "driving",
-    "gaming",
-    "gaming clips",
-    "funny gaming",
-    "gaming fails",
-    "gaming moments",
-    "esports",
-    "streamer",
-    "twitch",
-    "minecraft",
-    "roblox",
-    "fortnite",
-    "call of duty",
-    "gta",
-    "valorant",
-    "league of legends",
-    "dota",
-    "csgo",
-    "apex legends",
-    "overwatch",
-    "pubg",
-    "free fire",
-    "mobile legends",
-    "clash royale",
-    "pokemon",
-    "zelda",
-    "mario",
-    "sonic",
-    "speedrun",
-    "tech reviews",
-    "iphone tips",
-    "android tips",
-    "ai tools",
-    "chatgpt",
-    "coding",
-    "programming",
-    "python",
-    "javascript",
-    "web development",
-    "app development",
-    "game development",
-    "unity",
-    "unreal engine",
-    "excel tips",
-    "photoshop",
-    "video editing",
-    "camera tricks",
-    "photography",
-    "drones",
-    "rc cars",
-    "robotics",
-    "arduino",
-    "raspberry pi",
+    "car review", "car repair", "engine swap", "motorcycle",
+    "dirt bike", "atv", "truck", "offroad", "overlanding", "van life",
+    "rv life", "supercars", "luxury cars", "electric cars", "tesla",
+    "car fails", "dashcam", "driving", "gaming", "gaming clips",
+    "funny gaming", "gaming fails", "gaming moments", "esports",
+    "streamer", "twitch", "minecraft", "roblox", "fortnite",
+    "call of duty", "gta", "valorant", "league of legends", "dota",
+    "csgo", "apex legends", "overwatch", "pubg", "free fire",
+    "mobile legends", "clash royale", "pokemon", "zelda", "mario",
+    "sonic", "speedrun", "tech reviews", "iphone tips", "android tips",
+    "ai tools", "chatgpt", "coding", "programming", "python",
+    "javascript", "web development", "app development",
+    "game development", "unity", "unreal engine", "excel tips",
+    "photoshop", "video editing", "camera tricks", "photography",
+    "drones", "rc cars", "robotics", "arduino", "raspberry pi",
     "electronics",
 
     # --- Motivation, money & life ---
-    "motivation",
-    "motivational speech",
-    "self improvement",
-    "productivity",
-    "study motivation",
-    "success",
-    "business",
-    "entrepreneur",
-    "side hustle",
-    "passive income",
-    "investing",
-    "stocks",
-    "crypto",
-    "real estate",
-    "money tips",
-    "budgeting",
-    "saving money",
-    "frugal living",
-    "financial freedom",
-    "career advice",
-    "job interview",
-    "resume tips",
-    "public speaking",
-    "communication skills",
-    "body language",
-    "psychology",
-    "stoicism",
-    "philosophy",
-    "life advice",
-    "dating advice",
-    "relationship advice",
-    "marriage",
-    "parenting",
-    "baby",
-    "kids",
-    "family",
-    "mental health",
-    "meditation",
-    "mindfulness",
-    "sleep",
-    "health tips",
-    "skincare",
-    "makeup",
-    "hair",
-    "fashion",
-    "outfits",
-    "thrift",
-    "sneakers",
-    "streetwear",
-    "luxury",
-    "watches",
-    "jewelry",
-    "nails",
-    "tattoos",
-    "home remedies",
-    "first aid",
-    "survival",
-    "prepping",
-    "camping",
-    "hiking",
-    "backpacking",
-    "fishing",
-    "fly fishing",
-    "ice fishing",
-    "hunting",
-    "archery",
-    "shooting",
-    "knife making",
-    "bushcraft",
-    "foraging",
-    "gardening",
-    "hydroponics",
-    "aquaponics",
-    "beekeeping",
-    "chickens",
-    "goats",
-    "cows",
-    "farm",
-    "tractors",
-    "heavy equipment",
-    "construction",
-    "demolition",
-    "excavator",
-    "crane",
-    "bulldozer",
+    "motivation", "motivational speech", "self improvement",
+    "productivity", "study motivation", "success", "business",
+    "entrepreneur", "side hustle", "passive income", "investing",
+    "stocks", "crypto", "real estate", "money tips", "budgeting",
+    "saving money", "frugal living", "financial freedom",
+    "career advice", "job interview", "resume tips", "public speaking",
+    "communication skills", "body language", "psychology", "stoicism",
+    "philosophy", "life advice", "dating advice", "relationship advice",
+    "marriage", "parenting", "baby", "kids", "family", "mental health",
+    "meditation", "mindfulness", "sleep", "health tips", "skincare",
+    "makeup", "hair", "fashion", "outfits", "thrift", "sneakers",
+    "streetwear", "luxury", "watches", "jewelry", "nails", "tattoos",
+    "home remedies", "first aid", "survival", "prepping", "camping",
+    "hiking", "backpacking", "fishing", "fly fishing", "ice fishing",
+    "hunting", "archery", "shooting", "knife making", "bushcraft",
+    "foraging", "gardening", "hydroponics", "aquaponics", "beekeeping",
+    "chickens", "goats", "cows", "farm", "tractors", "heavy equipment",
+    "construction", "demolition", "excavator", "crane", "bulldozer",
     "monster trucks",
 
     # --- Science, facts & education ---
-    "science",
-    "science experiments",
-    "chemistry",
-    "physics",
-    "biology",
-    "math",
-    "history",
-    "geography",
-    "facts",
-    "did you know",
-    "trivia",
-    "riddles",
-    "brain teasers",
-    "optical illusions",
-    "magic tricks",
-    "card tricks",
-    "coin tricks",
-    "juggling",
-    "rubik's cube",
-    "puzzles",
-    "space",
-    "space facts",
-    "ocean",
-    "nature",
-    "weather",
-    "language learning",
-    "english lessons",
-    "spanish lessons",
-    "math tricks",
-    "study tips",
-    "how to",
-    "tutorials",
-    "repair",
+    "science", "science experiments", "chemistry", "physics", "biology",
+    "math", "history", "geography", "facts", "did you know", "trivia",
+    "riddles", "brain teasers", "optical illusions", "magic tricks",
+    "card tricks", "coin tricks", "juggling", "rubik's cube", "puzzles",
+    "space", "space facts", "ocean", "nature", "weather",
+    "language learning", "english lessons", "spanish lessons",
+    "math tricks", "study tips", "how to", "tutorials", "repair",
     "tips and tricks",
 ]
 
-LIMIT = 50          # max videos per search query
-SLEEP = 1.0         # seconds between requests (be polite)
+LIMIT = 50           # max videos per search query
+WORKERS = 5          # parallel workers (also the main speed knob)
+SLEEP = 0.4          # politeness delay per entry (per worker)
+OUTPUT = "video.json"
 
 HEADERS = {
     "User-Agent": (
@@ -487,11 +156,36 @@ URL_ID_RE = re.compile(
 )
 
 
+# ---------------------------------------------------------------- progress
+def progress_bar(done, total, prefix="Scraping", width=30):
+    """Print a percentage progress bar on one line."""
+    if total:
+        pct = done / total * 100.0
+        filled = int(width * done / total)
+    else:
+        pct = 100.0
+        filled = width
+    bar = "█" * filled + "░" * (width - filled)
+    sys.stdout.write(f"\r{prefix} [{bar}] {done}/{total} ({pct:5.1f}%)")
+    sys.stdout.flush()
+    if done >= total:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+
+
 # ---------------------------------------------------------------- fetch
-def fetch(url):
-    r = requests.get(url, headers=HEADERS, timeout=20)
-    r.raise_for_status()
-    return r.text
+def fetch(url, retries=1):
+    last_exc = None
+    for attempt in range(retries + 1):
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            return r.text
+        except requests.RequestException as e:
+            last_exc = e
+            if attempt < retries:
+                time.sleep(0.8 + attempt)
+    raise last_exc
 
 
 # ---------------------------------------------------------------- ytInitialData
@@ -620,7 +314,7 @@ def parse_video_ref(entry):
     if m:
         return m.group(1)
     if VIDEO_ID_RE.match(entry):
-        return entry          # maybe an id — verified later via oEmbed
+        return entry
     return None
 
 
@@ -653,17 +347,62 @@ def search(query, limit):
 
     # sp=EgIYAQ%3D%3D is YouTube's "Shorts only" filter
     url = f"https://www.youtube.com/results?search_query={q}&sp=EgIYAQ%3D%3D"
-    print(f"  searching: {url}")
-    data = extract_json(fetch(url))
+    try:
+        data = extract_json(fetch(url))
+    except requests.RequestException:
+        data = None
     videos = extract_videos(data) if data else []
 
     if not videos:
-        print("  no Shorts found, falling back to regular video search…")
         url = f"https://www.youtube.com/results?search_query={q}"
-        data = extract_json(fetch(url))
+        try:
+            data = extract_json(fetch(url))
+        except requests.RequestException:
+            data = None
         videos = extract_videos(data) if data else []
 
     return videos[:limit]
+
+
+# ---------------------------------------------------------------- worker
+def process_entry(entry, limit):
+    """Resolve one entry (query or video ref) to a list of videos."""
+    entry = entry.strip()
+    if not entry:
+        return entry, []
+
+    vid = parse_video_ref(entry)
+    try:
+        if vid:
+            v = fetch_video(vid)
+            batch = [v] if v else search(entry, limit)
+        else:
+            batch = search(entry, limit)
+    except Exception:
+        batch = []
+
+    time.sleep(SLEEP)  # politeness delay per entry (per worker)
+    return entry, batch
+
+
+# ---------------------------------------------------------------- storage
+def load_existing(path=OUTPUT):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return []
+
+
+def save_videos(videos, path=OUTPUT):
+    """Atomic write so an interrupted run can't corrupt the file."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(videos, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, path)
 
 
 # ---------------------------------------------------------------- main
@@ -678,47 +417,62 @@ def main():
     entries = argv or QUERIES
     if isinstance(entries, str):
         entries = [entries]
+    entries = [str(e).strip() for e in entries if str(e).strip()]
 
-    all_videos = []
-    seen = set()
+    existing = load_existing()
+    seen = {v.get("id") for v in existing if v.get("id")}
+    print(f"Loaded {len(existing)} existing videos from {OUTPUT}")
 
-    for entry in entries:
-        entry = str(entry).strip()
-        if not entry:
-            continue
+    new_videos = []
+    errors = []
+    lock = threading.Lock()
+    done = 0
+    total = len(entries)
 
-        batch = []
-        vid = parse_video_ref(entry)
+    start_time = time.time()
+    progress_bar(0, total)
 
-        if vid:
-            print(f"Video: {vid}")
-            video = fetch_video(vid)
-            if video:
-                batch = [video]
-            else:
-                print("  not a video, treating as a search query…")
-                batch = search(entry, limit)
-        else:
-            print(f"Query: {entry}")
-            batch = search(entry, limit)
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as ex:
+            futures = {ex.submit(process_entry, e, limit): e for e in entries}
+            for fut in concurrent.futures.as_completed(futures):
+                entry = futures[fut]
+                try:
+                    _, batch = fut.result()
+                except Exception as e:
+                    errors.append((entry, e))
+                    batch = []
 
-        for v in batch:
-            if v["id"] in seen:
-                continue
-            seen.add(v["id"])
-            v["query"] = entry      # which entry produced it
-            all_videos.append(v)
+                with lock:
+                    for v in batch:
+                        vid = v.get("id")
+                        if not vid or vid in seen:
+                            continue
+                        seen.add(vid)
+                        v["query"] = entry
+                        new_videos.append(v)
 
-        time.sleep(SLEEP)
+                done += 1
+                progress_bar(done, total)
+    except KeyboardInterrupt:
+        sys.stdout.write("\nInterrupted — saving partial results...\n")
+    finally:
+        combined = existing + new_videos
+        if combined:
+            save_videos(combined)
+        elapsed = time.time() - start_time
 
-    if not all_videos:
+        print(
+            f"\nDone in {elapsed:0.1f}s. "
+            f"Added {len(new_videos)} new videos "
+            f"({len(existing)} existing → {len(combined)} total in {OUTPUT})."
+        )
+        for entry, err in errors:
+            print(f"  error for {entry!r}: {err}")
+
+    if not existing and not new_videos:
         print("No videos found.")
         sys.exit(1)
-
-    with open("video.json", "w", encoding="utf-8") as f:
-        json.dump(all_videos, f, indent=2, ensure_ascii=False)
-
-    print(f"Wrote {len(all_videos)} videos to video.json")
 
 
 if __name__ == "__main__":

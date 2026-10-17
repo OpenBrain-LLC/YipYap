@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Shorts</title>
+<title>YipYap | app</title>
 
 <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
 <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
@@ -11,13 +11,73 @@
 <link rel="dns-prefetch" href="https://i.ytimg.com">
 
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    --accent: #ff2e63;
+    --accent-2: #4da3ff;
+    --accent-3: #ffb347;
+    --fg: #fff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.85);
+  }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body {
     height:100%; background:#000; overflow:hidden;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior:none;
   }
 
+  /* ---------- satisfaction bar ---------- */
+  #satisfaction {
+    position:fixed; top:0; left:0; right:0; height:2px;
+    background:rgba(255,255,255,0.05);
+    z-index:25; pointer-events:none; overflow:hidden;
+  }
+  #satisfaction-bar {
+    position:absolute; inset:0;
+    background:linear-gradient(90deg, var(--accent), var(--accent-3), var(--accent-2));
+    transform:scaleX(0.5); transform-origin:left;
+    transition:transform 0.45s cubic-bezier(0.4,0,0.2,1);
+    will-change:transform;
+  }
+
+  /* ---------- streak flame ---------- */
+  #streak {
+    position:fixed;
+    top:calc(68px + env(safe-area-inset-top));
+    left:14px; z-index:20;
+    display:flex; align-items:center; gap:6px;
+    padding:6px 11px 6px 9px;
+    background:rgba(0,0,0,0.55);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    font-size:13px; font-weight:800;
+    color:#fff;
+    opacity:0; transform:translateY(-8px) scale(0.9);
+    transition:opacity 0.3s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events:none;
+  }
+  #streak.on { opacity:1; transform:translateY(0) scale(1); }
+  #streak svg {
+    width:16px; height:16px;
+    filter:drop-shadow(0 0 8px rgba(255,69,0,0.9));
+    animation:flameDance 0.55s ease-in-out infinite alternate;
+  }
+  @keyframes flameDance {
+    from { transform:scale(1) rotate(-4deg); }
+    to   { transform:scale(1.18) rotate(4deg); }
+  }
+  #streak .num {
+    background:linear-gradient(180deg, #ff9f43 0%, #ff2e63 100%);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    font-variant-numeric:tabular-nums;
+    line-height:1;
+    font-size:14px;
+    padding-bottom:1px;
+  }
+
+  /* ---------- feed ---------- */
   #feed {
     height:100vh; height:100dvh;
     overflow-y:scroll;
@@ -37,6 +97,11 @@
     overflow:hidden;
     background:#000;
     contain: layout paint style;
+    animation:slideIn 0.4s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity:0.5; }
+    to   { opacity:1; }
   }
 
   .short .thumb,
@@ -47,16 +112,43 @@
   }
   .short .thumb {
     object-fit:cover;
-    filter:brightness(.6);
-    transition:opacity .25s;
+    filter:brightness(0.68);
+    transition:opacity 0.3s;
   }
   .short .thumb.hidden { opacity:0; }
 
+  .short::after {
+    content:''; position:absolute;
+    left:0; right:0; bottom:0; height:45%;
+    background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.75) 100%);
+    pointer-events:none; z-index:2;
+  }
+
+  /* ---------- per-slide progress ---------- */
+  .progress {
+    position:absolute; left:0; right:0; bottom:0; height:2px;
+    background:rgba(255,255,255,0.08);
+    z-index:6; pointer-events:none;
+    overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--accent), var(--accent-3));
+    box-shadow:0 0 8px rgba(255,46,99,0.6);
+  }
+  .short[data-on="1"] .progress-fill {
+    animation:progressGrow 30s linear forwards;
+  }
+  @keyframes progressGrow {
+    from { width:0%; }
+    to   { width:100%; }
+  }
+
+  /* ---------- fallback ---------- */
   .short .fallback {
     position:absolute; inset:0;
     display:none;
-    align-items:center; justify-content:center;
-    gap:8px;
+    align-items:center; justify-content:center; gap:8px;
     text-align:center; padding:24px;
     color:#fff; font-size:14px; line-height:1.6;
     background:linear-gradient(180deg,#1a1a1a,#000);
@@ -66,57 +158,85 @@
   .short.failed .thumb { opacity:.35; }
   .fallback svg { width:18px; height:18px; }
 
+  /* ---------- meta ---------- */
   .meta {
-    position:absolute; left:14px; right:84px; bottom:26px;
+    position:absolute;
+    left:14px;
+    right:84px;
+    bottom:calc(26px + env(safe-area-inset-bottom));
     color:#fff; z-index:3; pointer-events:none;
-    text-shadow:0 1px 5px rgba(0,0,0,.85);
+    text-shadow:0 1px 6px rgba(0,0,0,0.9);
   }
-  .meta .ch { font-size:15px; font-weight:700; margin-bottom:6px; }
+  .meta .ch {
+    font-size:15px; font-weight:800;
+    margin-bottom:6px;
+    letter-spacing:0.15px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .meta .ch::before {
+    content:''; width:6px; height:6px; border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 8px var(--accent);
+    flex-shrink:0;
+  }
   .meta .ti {
-    font-size:14px; line-height:1.35; opacity:.95;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    font-size:14px; line-height:1.4;
+    opacity:0.95;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
     overflow:hidden;
   }
 
+  /* ---------- action rail ---------- */
   .actions {
     position:absolute;
     right:10px;
-    bottom:92px;
+    bottom:calc(92px + env(safe-area-inset-bottom));
     z-index:4;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-    align-items:center;
+    display:flex; flex-direction:column;
+    gap:18px; align-items:center;
   }
   .act {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:5px;
-    background:none;
-    border:0;
-    color:#fff;
-    cursor:pointer;
-    padding:0;
-    line-height:0;
+    display:flex; flex-direction:column;
+    align-items:center; gap:5px;
+    background:none; border:0; color:#fff;
+    cursor:pointer; padding:0; line-height:0;
+    position:relative;
   }
   .act svg {
     width:32px; height:32px;
-    filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));
-    transition:transform .12s ease;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    transition:transform 0.15s ease;
   }
-  .act:active svg { transform:scale(.88); }
+  .act:active svg { transform:scale(0.85); }
   .act .count {
-    font-size:12px;
-    font-weight:600;
+    font-size:12px; font-weight:700;
     line-height:1;
-    text-shadow:0 1px 3px rgba(0,0,0,.85);
+    text-shadow:0 1px 3px rgba(0,0,0,0.9);
   }
-  .act.like.on    { color:#ff2e63; }
-  .act.dislike.on { color:#4da3ff; }
+  .act.like.on    { color:var(--accent); }
+  .act.dislike.on { color:var(--accent-2); }
   .act.on svg path { fill:currentColor; }
 
-  /* ---------------- top overlay ---------------- */
+  /* ---------- heart burst ---------- */
+  .heart-burst {
+    position:fixed;
+    font-size:22px;
+    color:var(--accent);
+    pointer-events:none;
+    z-index:50;
+    transform:translate(-50%,-50%);
+    animation:burst 0.9s cubic-bezier(0.2,0.6,0.3,1) forwards;
+    text-shadow:0 0 12px var(--accent);
+  }
+  @keyframes burst {
+    0%   { opacity:1; transform:translate(-50%,-50%) rotate(0deg) scale(0.5); }
+    60%  { opacity:1; }
+    100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(1.2); }
+  }
+
+  /* ---------- top bar ---------- */
   #topbar {
     position:fixed;
     z-index:19;
@@ -124,33 +244,29 @@
     left:14px;
     right:calc(66px + env(safe-area-inset-right));
     height:44px;
-    display:flex;
-    align-items:center;
-    gap:8px;
+    display:flex; align-items:center; gap:8px;
     padding:0 12px;
-    background:rgba(0,0,0,.55);
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    border:1px solid rgba(255,255,255,.08);
+    background:rgba(0,0,0,0.55);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.08);
     border-radius:22px;
   }
   #topbar .s-icon {
     width:18px; height:18px; flex-shrink:0;
-    color:#fff; opacity:.7;
+    color:#fff; opacity:0.7;
   }
   #search {
     flex:1; min-width:0;
     background:none; border:0; outline:0;
     color:#fff; font-size:14px; font-family:inherit;
-    -webkit-appearance:none;
-    appearance:none;
+    -webkit-appearance:none; appearance:none;
   }
-  #search::placeholder { color:rgba(255,255,255,.5); }
+  #search::placeholder { color:rgba(255,255,255,0.5); }
   #search::-webkit-search-cancel-button { display:none; }
   #topbar .s-count {
     font-size:11px;
-    font-variant-numeric: tabular-nums;
-    opacity:.6;
+    font-variant-numeric:tabular-nums;
+    opacity:0.6;
     flex-shrink:0;
     color:#fff;
     display:none;
@@ -159,61 +275,108 @@
   #topbar .s-clear {
     width:22px; height:22px; flex-shrink:0;
     padding:0; border:0; cursor:pointer;
-    background:rgba(255,255,255,.18);
-    color:#fff;
-    border-radius:50%;
+    background:rgba(255,255,255,0.18);
+    color:#fff; border-radius:50%;
     display:none;
     align-items:center; justify-content:center;
+    transition:transform 0.1s;
   }
   #topbar.has-text .s-clear { display:flex; }
   #topbar .s-clear svg { width:12px; height:12px; }
-  #topbar .s-clear:active { transform:scale(.92); }
+  #topbar .s-clear:active { transform:scale(0.92); }
 
+  /* ---------- empty state ---------- */
   #empty-state {
-    position:fixed; inset:0;
-    z-index:15;
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    padding:24px;
-    text-align:center;
-    color:#fff;
+    position:fixed; inset:0; z-index:15;
+    display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:8px;
+    padding:24px; text-align:center; color:#fff;
     pointer-events:none;
   }
   #empty-state.show { display:flex; }
   #empty-state .es-title { font-size:18px; font-weight:700; }
   #empty-state .es-query {
-    font-size:14px; opacity:.75; max-width:80%;
+    font-size:14px; opacity:0.75; max-width:80%;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  #empty-state .es-hint { font-size:13px; opacity:.5; margin-top:10px; }
+  #empty-state .es-hint { font-size:13px; opacity:0.5; margin-top:10px; }
 
+  /* ---------- mute ---------- */
   #mute {
     position:fixed; z-index:20;
     top:calc(14px + env(safe-area-inset-top)); right:14px;
     width:44px; height:44px; border-radius:50%; border:0;
-    background:rgba(0,0,0,.55); color:#fff;
-    cursor:pointer; backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
+    background:rgba(0,0,0,0.55); color:#fff;
+    cursor:pointer;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
     display:flex; align-items:center; justify-content:center;
+    transition:transform 0.15s;
   }
-  #mute:active { transform:scale(.92); }
+  #mute:active { transform:scale(0.92); }
   #mute svg { width:22px; height:22px; }
   #mute .i-on { display:none; }
   #mute.unmuted .i-on  { display:block; }
   #mute.unmuted .i-off { display:none; }
+  #mute.unmuted { animation:pulseUnmuted 2.2s ease-in-out infinite; }
+  @keyframes pulseUnmuted {
+    0%,100% { box-shadow:0 0 0 0 rgba(255,46,99,0.45); }
+    50%     { box-shadow:0 0 0 10px rgba(255,46,99,0); }
+  }
 
+  /* ---------- swipe hint ---------- */
+  #swipe-hint {
+    position:fixed;
+    bottom:calc(150px + env(safe-area-inset-bottom));
+    left:50%; transform:translateX(-50%);
+    z-index:18;
+    display:flex; flex-direction:column;
+    align-items:center; gap:4px;
+    color:rgba(255,255,255,0.75);
+    font-size:11px; font-weight:600;
+    letter-spacing:0.4px;
+    pointer-events:none;
+    animation:swipeHint 2.2s ease-in-out infinite;
+    transition:opacity 0.5s;
+    text-transform:uppercase;
+  }
+  #swipe-hint.hidden { opacity:0; }
+  #swipe-hint svg {
+    width:20px; height:20px;
+    filter:drop-shadow(0 1px 4px rgba(0,0,0,0.8));
+  }
+  @keyframes swipeHint {
+    0%,100% { transform:translateX(-50%) translateY(0);   opacity:0.55; }
+    50%     { transform:translateX(-50%) translateY(-8px); opacity:1; }
+  }
+
+  /* ---------- loading ---------- */
   #msg {
     position:fixed; inset:0; z-index:50;
     display:flex; align-items:center; justify-content:center;
-    background:#000; color:#9a9a9a; padding:28px;
-    text-align:center; font-size:15px; line-height:1.7;
+    background:#000; color:#9a9a9a;
+    transition:opacity 0.45s;
   }
+  #msg.gone { opacity:0; pointer-events:none; }
+  .spinner {
+    width:26px; height:26px;
+    border:2px solid rgba(255,255,255,0.15);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
+
+<div id="satisfaction"><div id="satisfaction-bar"></div></div>
+
+<div id="streak">
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 2c.5 3 2.5 5 4.5 7 1.5 1.5 2.5 3.5 2.5 6 0 3.5-3 6.5-7 6.5s-7-3-7-6.5c0-2 1-4 2.5-5.5C9.5 8 11 6 12 2zm0 18c1.5 0 3-1 3-2.5 0-1-0.7-1.8-1.5-2.6-.5-.5-1-.9-1.5-1.4-.5.5-1 1-1.5 1.5-.8.8-1.5 1.5-1.5 2.5 0 1.5 1.5 2.5 3 2.5z"/>
+  </svg>
+  <span class="num">0</span>
+</div>
 
 <div id="feed"></div>
 
@@ -256,7 +419,16 @@
   </svg>
 </button>
 
-<div id="msg">Loading&hellip;</div>
+<div id="swipe-hint">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="5 12 12 5 19 12"/>
+  </svg>
+  <span>Swipe up</span>
+</div>
+
+<div id="msg"><div class="spinner"></div></div>
 
 <script>
 (() => {
@@ -265,34 +437,88 @@
   /* ==================================================================
      TUNABLES
      ================================================================== */
-  const PRELOAD_COUNT    = 25;
-  const BATCH            = 12;
-  const MAX_SLIDES       = 72;
-  const TRIM_TO          = 48;
-  const KEEP_ABOVE       = 20;
-  const KEEP_BELOW       = 20;
-  const PREFETCH_SCREENS = 2.5;
-  const HISTORY_MAX      = 240;
-  const EMBED_TIMEOUT    = 4000;
+  const PRELOAD_COUNT     = 10;
+  const BATCH             = 10;
+  const MAX_SLIDES        = 64;
+  const TRIM_TO           = 40;
+  const KEEP_ABOVE        = 18;
+  const KEEP_BELOW        = 18;
+  const PREFETCH_SCREENS  = 2.5;
+  const HISTORY_MAX       = 200;
+  const EMBED_TIMEOUT     = 4000;
   const SHARD_CONCURRENCY = 6;
 
-  const WHEEL_THRESHOLD  = 25;
-  const WHEEL_COOLDOWN   = 450;
-  const SWIPE_FALLBACK   = 0.40;
-  const SWIPE_MIN_PX     = 40;
-  const SWIPE_MAX_MS     = 300;
+  const WHEEL_THRESHOLD   = 25;
+  const WHEEL_COOLDOWN    = 450;
+  const SWIPE_FALLBACK    = 0.40;
+  const SWIPE_MIN_PX      = 40;
+  const SWIPE_MAX_MS      = 300;
 
-  const SEARCH_DEBOUNCE  = 100;   // ms — feels instant, batches keystrokes
+  const SEARCH_DEBOUNCE   = 100;
 
-  const CACHE_KEY    = "shorts.videos.v1";
-  const STATE_KEY    = "shorts.state.v1";
-  const WEIGHT_MIN   = 0.05;
-  const WEIGHT_MAX   = 5;
-  const LIKE_MULT    = 1.6;
-  const DISLIKE_MULT = 0.25;
-  const SAVE_DEBOUNCE = 400;
-  const SAVE_MAX_W   = 5000;
-  const SAVE_MAX_LD  = 2000;
+  const CACHE_KEY         = "yipyap.videos.v1";
+  const STATE_KEY         = "yipyap.state.v1";
+  const STATS_KEY         = "yipyap.stats.v1";
+  const SAVE_DEBOUNCE     = 400;
+  const SAVE_MAX_W        = 5000;
+  const SAVE_MAX_LD       = 2000;
+
+  /* ---- reward function ---- */
+  const TAU_PHI      = 5000;
+  const T_BOUNCE     = 2500;
+  const T_COMPLETE   = 15000;
+  const A_LIKE       = 0.9;
+  const A_DISLIKE    = -1.2;
+  const A_SHARE      = 1.0;
+  const A_COMPLETE   = 0.6;
+  const A_PHI        = 0.5;
+  const A_UNMUTE     = 0.3;
+  const A_BOUNCE     = 0.8;
+  const BETA_S       = 1.0;
+  const MIN_DWELL    = 200;
+
+  /* ---- Beta / Thompson ---- */
+  const A0           = 1;
+  const B0           = 1;
+  const GAMMA_DECAY  = 0.97;
+  const KAPPA        = 1 / Math.sqrt(2);
+
+  /* ---- session state ---- */
+  const RHO          = 0.30;
+  const T_MIN        = 0.6;
+  const T_MAX        = 1.8;
+  const THETA_S      = 0.25;
+  const TAU_S        = 0.35;
+  const STREAK_HOT   = 3;
+  const STREAK_MULT  = 0.75;
+
+  /* ---- diversity ---- */
+  const K_DIV        = 8;
+  const GAMMA_DIV    = 0.7;
+  const LAMBDA_D     = 1.2;
+  const SAME_CH_LIM  = 2;
+
+  /* ---- fatigue ---- */
+  const TAU_F        = 12;
+  const KAPPA_SAT    = 0.5;
+  const LAMBDA_F     = 0.9;
+
+  /* ---- global ---- */
+  const LAMBDA_N     = 1.2;
+  const SHORTLIST    = 64;
+
+  /* ---- jackpot ---- */
+  const P_JACKPOT    = 0.20;
+  const ALPHA_J      = 1.5;
+  const JACK_CLIP    = 2.5;
+
+  /* ---- override weights ---- */
+  const U_LIKE       = 2.0;
+  const U_DISLIKE    = 0;
+  const U_DEFAULT    = 1.0;
+
+  const LOG_W_MIN    = Math.log(1e-4);
+  const LOG_W_MAX    = Math.log(1e3);
 
   /* ==================================================================
      DOM
@@ -306,6 +532,10 @@
   const SCOUNT   = document.getElementById("scount");
   const EMPTY    = document.getElementById("empty-state");
   const ESQUERY  = document.getElementById("esquery");
+  const SAT_BAR  = document.getElementById("satisfaction-bar");
+  const STREAK   = document.getElementById("streak");
+  const STREAK_N = STREAK.querySelector(".num");
+  const SWIPE    = document.getElementById("swipe-hint");
 
   /* ==================================================================
      SVG
@@ -316,21 +546,51 @@
       '<path d="M7 10v12"/>' +
       '<path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>' +
     '</svg>';
-
   const SVG_DISLIKE =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
     'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="M17 14V2"/>' +
       '<path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>' +
     '</svg>';
-
   const SVG_PLAY =
     '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none">' +
       '<polygon points="6 4 20 12 6 20 6 4"/>' +
     '</svg>';
 
   /* ==================================================================
-     FENWICK SAMPLER — O(log n) draw, O(log n) absolute weight set
+     MATH HELPERS
+     ================================================================== */
+  function randn() {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function pareto() {
+    const u = Math.random();
+    return Math.min(JACK_CLIP, Math.pow(1 - u, -1 / ALPHA_J) - 1);
+  }
+  function sigmoid(x) {
+    if (x < -40) return 0;
+    if (x >  40) return 1;
+    return 1 / (1 + Math.exp(-x));
+  }
+  function hash(str) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return h >>> 0;
+  }
+  function fmt(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(n);
+  }
+
+  /* ==================================================================
+     SAMPLER (Fenwick)
      ================================================================== */
   class Sampler {
     constructor(n) {
@@ -375,16 +635,16 @@
       if (w > 0) {
         this.live[idx] = 0;
         this._add(idx, -w);
+        return idx;
       }
-      return idx;
+      return -1;
     }
-    /* absolute weight set; respects masked-out zeros */
     setWeight(i, w) {
       if (i < 0 || i >= this.n) return;
       const nw = w > 0 ? w : 0;
       this.base[i] = nw;
       const old = this.live[i];
-      if (old === 0) return;         // already drawn this round
+      if (old === 0) return;
       if (nw === old) return;
       this.live[i] = nw;
       this._add(i, nw - old);
@@ -392,11 +652,11 @@
   }
 
   /* ==================================================================
-     STORE — persistent userWeights + liked/disliked sets
+     STORE (userWeights, liked, disliked)
      ================================================================== */
   const Store = (() => {
     let idxMap   = new Map();
-    let userRef  = null;          // Float64Array of user weights
+    let userRef  = null;
     let liked    = new Set();
     let disliked = new Set();
     let dirty    = new Set();
@@ -413,7 +673,7 @@
         if (!raw) return;
         const data = JSON.parse(raw);
         if (!data || data.v !== 1) return;
-        if (Array.isArray(data.l)) liked = new Set(data.l);
+        if (Array.isArray(data.l)) liked    = new Set(data.l);
         if (Array.isArray(data.d)) disliked = new Set(data.d);
         if (data.w && typeof data.w === "object" && userRef) {
           for (const id in data.w) {
@@ -421,7 +681,7 @@
             if (i === undefined) continue;
             const val = data.w[id];
             if (typeof val !== "number" || !isFinite(val)) continue;
-            userRef[i] = Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, val));
+            userRef[i] = Math.min(U_LIKE, Math.max(U_DISLIKE, val));
             dirty.add(id);
           }
         }
@@ -458,7 +718,7 @@
           const i = idxMap.get(id);
           if (i === undefined) continue;
           const val = userRef[i];
-          if (Math.abs(val - 1) > 1e-3) w[id] = val;
+          if (Math.abs(val - U_DEFAULT) > 1e-3) w[id] = val;
         }
         const keys = Object.keys(w);
         if (keys.length > SAVE_MAX_W) {
@@ -479,21 +739,19 @@
       }
     }
 
-    return {
-      attach, load, flush, schedule, disable,
-      markWeight, setLiked, setDisliked, isLiked, isDisliked
-    };
+    return { attach, load, flush, schedule, disable,
+             markWeight, setLiked, setDisliked, isLiked, isDisliked };
   })();
 
   /* ==================================================================
-     IndexedDB cache for the video list
+     IndexedDB
      ================================================================== */
   let _db = null;
   function db() {
     if (_db) return _db;
     _db = new Promise((res, rej) => {
-      if (typeof indexedDB === "undefined") return rej(new Error("no indexedDB"));
-      const req = indexedDB.open("shorts-cache", 1);
+      if (typeof indexedDB === "undefined") return rej(new Error("no idb"));
+      const req = indexedDB.open("yipyap", 1);
       req.onupgradeneeded = () => {
         const d = req.result;
         if (!d.objectStoreNames.contains("json")) d.createObjectStore("json");
@@ -507,7 +765,7 @@
     try {
       const d = await db();
       return await new Promise((res) => {
-        const q = d.transaction("json", "readonly").objectStore("json").get(key);
+        const q = d.transaction("json","readonly").objectStore("json").get(key);
         q.onsuccess = () => res(q.result || null);
         q.onerror   = () => res(null);
       });
@@ -517,7 +775,7 @@
     try {
       const d = await db();
       await new Promise((res) => {
-        const tx = d.transaction("json", "readwrite");
+        const tx = d.transaction("json","readwrite");
         tx.objectStore("json").put(val, key);
         tx.oncomplete = tx.onerror = tx.onabort = () => res();
       });
@@ -525,7 +783,133 @@
   }
 
   /* ==================================================================
-     Bounded concurrency
+     STATS (per-item Beta posterior, persisted to IDB)
+     ================================================================== */
+  const Stats = (() => {
+    let idxMap   = new Map();
+    let A        = null;
+    let B        = null;
+    let N        = null;
+    let LAST     = null;
+    let impCount = 100;          // start high so untouched items = no fatigue
+    let dirty    = false;
+    let timer    = 0;
+    let enabled  = true;
+    let nBar     = 1;
+
+    function attach(map, aArr, bArr, nArr, lArr) {
+      idxMap = map; A = aArr; B = bArr; N = nArr; LAST = lArr;
+    }
+    function disable() { enabled = false; }
+
+    async function load() {
+      if (!enabled) return;
+      const data = await idbGet(STATS_KEY);
+      if (!data || data.v !== 1 || !Array.isArray(data.ids)) return;
+      for (let k = 0; k < data.ids.length; k++) {
+        const i = idxMap.get(data.ids[k]);
+        if (i === undefined) continue;
+        A[i] = data.a[k];
+        B[i] = data.b[k];
+        N[i] = data.n[k];
+      }
+    }
+
+    function decayAll() {
+      if (!enabled) return;
+      for (let i = 0; i < A.length; i++) {
+        A[i] *= GAMMA_DECAY;
+        B[i] *= GAMMA_DECAY;
+      }
+    }
+
+    function update(idx, r) {
+      if (!enabled) return;
+      if (r > 0) A[idx] += r;
+      else if (r < 0) B[idx] += -r;
+      N[idx]++;
+      LAST[idx] = ++impCount;
+      // Recompute nBar lazily
+      let sum = 0;
+      for (let i = 0; i < N.length; i++) sum += N[i];
+      nBar = sum / Math.max(1, N.length);
+      dirty = true;
+      schedule();
+    }
+
+    function schedule() {
+      if (!enabled) return;
+      clearTimeout(timer);
+      timer = setTimeout(flush, SAVE_DEBOUNCE);
+    }
+
+    async function flush() {
+      if (!enabled || !dirty || !A) return;
+      dirty = false;
+      try {
+        const ids = [], a = [], b = [], n = [];
+        for (let i = 0; i < A.length; i++) {
+          ids.push(pool[i].id);
+          a.push(A[i]);
+          b.push(B[i]);
+          n.push(N[i]);
+        }
+        await idbSet(STATS_KEY, { v:1, ids, a, b, n });
+      } catch (_) {}
+    }
+
+    return {
+      attach, load, update, flush, decayAll, disable,
+      get A() { return A; },
+      get B() { return B; },
+      get N() { return N; },
+      get LAST() { return LAST; },
+      get impCount() { return impCount; },
+      get nBar() { return nBar; }
+    };
+  })();
+
+  /* ==================================================================
+     HAZARD MODEL (tiny logistic, persisted)
+     ================================================================== */
+  const Hazard = (() => {
+    let beta = [0, 0, 0, 0, 0, 0];
+    let enabled = true;
+
+    function load() {
+      if (!enabled) return;
+      try {
+        const raw = localStorage.getItem("yipyap.hazard.v1");
+        if (!raw) return;
+        const p = JSON.parse(raw);
+        if (Array.isArray(p) && p.length === 6) beta = p;
+      } catch (_) {}
+    }
+    function save() {
+      if (!enabled) return;
+      try { localStorage.setItem("yipyap.hazard.v1", JSON.stringify(beta)); }
+      catch (_) {}
+    }
+    function features(S, k, hasSearch, t) {
+      return [1, S, k, S * k, hasSearch ? 1 : 0, Math.log(1 + t / 1000)];
+    }
+    function predict(x) {
+      let z = 0;
+      for (let i = 0; i < x.length; i++) z += beta[i] * x[i];
+      return sigmoid(z);
+    }
+    function train(x, y) {
+      const h = predict(x);
+      const err = y - h;
+      for (let i = 0; i < x.length; i++) beta[i] += 0.02 * err * x[i];
+    }
+    function disable() { enabled = false; }
+
+    return { load, save, features, predict, train, disable };
+  })();
+
+  /* ==================================================================
+     BOUNDED CONCURRENCY
      ================================================================== */
   function mapLimit(items, limit, fn) {
     return new Promise((resolve, reject) => {
@@ -547,7 +931,7 @@
   }
 
   /* ==================================================================
-     Loader
+     LOADER
      ================================================================== */
   async function loadVideos() {
     const hit = await idbGet(CACHE_KEY);
@@ -581,9 +965,6 @@
     return { list, source: "network" };
   }
 
-  /* ==================================================================
-     Demo
-     ================================================================== */
   const DEMO = [
     { id:"aqz-KE-bpKQ", title:"Big Buck Bunny",          channel:"Blender",     thumbnail:"https://i.ytimg.com/vi/aqz-KE-bpKQ/hqdefault.jpg" },
     { id:"jNQXAC9IVRw", title:"Me at the zoo",           channel:"jawed",       thumbnail:"https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg" },
@@ -592,88 +973,73 @@
   ];
 
   /* ==================================================================
-     State
+     STATE
      ================================================================== */
   let pool         = [];
   let sampler      = null;
-  let userWeights  = null;    // Float64Array, persistent per pool index
-  let searchScores = null;    // Float32Array or null; 0 == not matching
-  let searchCount  = 0;       // number of matches (0 only when searching)
-  let haystack     = null;    // lowercased (title + " " + channel + " " + id)
+  let userWeights  = null;
+  let searchScores = null;
+  let searchCount  = 0;
+  let haystack     = null;
   let titleLower   = null;
   let channelLower = null;
+  let titleTokens  = null;
   let muted        = true;
   const history    = [];
+  let shortlist    = [];
+  const recent     = [];
+
+  const Session = {
+    k: 0,
+    S: 0,
+    streak: 0
+  };
 
   /* ==================================================================
-     Helpers
-     ================================================================== */
-  function hash(str) {
-    let h = 2166136261 >>> 0;
-    for (let i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 16777619) >>> 0;
-    }
-    return h >>> 0;
-  }
-  function fmt(n) {
-    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
-    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
-    return String(n);
-  }
-  function clampWeight(w) {
-    return Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, w));
-  }
-
-  /* ==================================================================
-     Search index
+     SEARCH
      ================================================================== */
   function buildHaystack() {
     const n = pool.length;
     haystack     = new Array(n);
     titleLower   = new Array(n);
     channelLower = new Array(n);
+    titleTokens  = new Array(n);
     for (let i = 0; i < n; i++) {
       const v = pool[i];
-      const t = (v.title || "").toLowerCase();
+      const t = (v.title   || "").toLowerCase();
       const c = (v.channel || "").toLowerCase();
       titleLower[i]   = t;
       channelLower[i] = c;
       haystack[i] = t + " " + c + " " + v.id;
+      const words = t.split(/\s+/).filter(w => w.length > 2);
+      titleTokens[i] = new Set(words);
     }
   }
 
-  /* returns { scores, count } — scores[i] === 0 means "no match" */
   function searchVideos(q) {
     const query = q.toLowerCase();
     const tokens = query.split(/\s+/).filter(Boolean);
     const scores = new Float32Array(pool.length);
     let count = 0;
-
     if (!tokens.length) return { scores, count: 0 };
 
-    const n = pool.length;
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < pool.length; i++) {
       const hay = haystack[i];
-
-      /* all tokens must appear */
       let ok = true;
       for (let t = 0; t < tokens.length; t++) {
         if (hay.indexOf(tokens[t]) === -1) { ok = false; break; }
       }
       if (!ok) continue;
 
-      /* relevance tier */
       const title = titleLower[i];
       const chan  = channelLower[i];
-
       let s = 1;
-      if (title === query)                       s += 5;
-      else if (title.startsWith(query))          s += 3;
-      else if (title.indexOf(query) !== -1)      s += 2;
-      if (chan.startsWith(query))                s += 1.5;
-      else if (chan.indexOf(query) !== -1)       s += 0.75;
-      if (pool[i].id === query)                  s += 4;
+      if (title === query)                  s += 5;
+      else if (title.startsWith(query))     s += 3;
+      else if (title.indexOf(query) !== -1) s += 2;
+      if (chan.startsWith(query))           s += 1.5;
+      else if (chan.indexOf(query) !== -1)  s += 0.75;
+      if (pool[i].id === query)             s += 4;
 
       scores[i] = s;
       count++;
@@ -682,27 +1048,279 @@
   }
 
   /* ==================================================================
-     Weight + sampler plumbing
+     WEIGHT COMPUTATION
      ================================================================== */
-  function computeBase(i) {
+  function staticLogWeight(i) {
     const uw = userWeights[i];
-    if (!searchScores) return uw;
-    const ss = searchScores[i];
-    if (ss <= 0) return 0;
-    return uw * ss;
+    if (uw === U_DISLIKE) return -Infinity;
+    if (searchScores && searchScores[i] <= 0) return -Infinity;
+    if (!Stats.A) return Math.log(uw);
+
+    let lw = Math.log(uw);
+    lw += KAPPA * Math.log(Stats.A[i] / Stats.B[i]);
+    if (Stats.N[i] === 0) lw += LAMBDA_N;
+    if (searchScores) lw += Math.log(searchScores[i]);
+    return lw;
+  }
+
+  function staticWeight(i) {
+    const lw = staticLogWeight(i);
+    if (lw === -Infinity) return 0;
+    return Math.exp(Math.max(LOG_W_MIN, Math.min(LOG_W_MAX, lw)));
   }
 
   function syncSampler() {
     const n = sampler.n;
-    for (let i = 0; i < n; i++) sampler.base[i] = computeBase(i);
+    for (let i = 0; i < n; i++) sampler.base[i] = staticWeight(i);
     sampler._reset();
+    shortlist = [];
   }
 
   /* ==================================================================
-     Feed reset — used after search changes
+     DIVERSITY
+     ================================================================== */
+  function similarity(i, j) {
+    let s = 0;
+    if (pool[i].channel === pool[j].channel) s += 1;
+    const ti = titleTokens[i], tj = titleTokens[j];
+    if (ti.size > 0 || tj.size > 0) {
+      let inter = 0;
+      for (const w of ti) if (tj.has(w)) inter++;
+      const union = ti.size + tj.size - inter;
+      if (union > 0) s += 0.5 * (inter / union);
+    }
+    return s;
+  }
+
+  function diversityPenalty(i) {
+    const m = Math.min(K_DIV, recent.length);
+    if (m === 0) return 0;
+    let num = 0, den = 0;
+    for (let k = 0; k < m; k++) {
+      const j = recent[recent.length - 1 - k];
+      const w = Math.pow(GAMMA_DIV, k);
+      num += w * similarity(i, j);
+      den += w;
+    }
+    return den > 0 ? num / den : 0;
+  }
+
+  function sameChannelBlocked(i) {
+    if (recent.length < SAME_CH_LIM) return false;
+    const a = recent[recent.length - 1];
+    const b = recent[recent.length - 2];
+    return pool[i].channel === pool[a].channel &&
+           pool[i].channel === pool[b].channel;
+  }
+
+  /* ==================================================================
+     FATIGUE
+     ================================================================== */
+  function fatiguePenalty(i) {
+    const lastSeen = Stats.LAST[i];
+    const delta = Stats.impCount - lastSeen;
+    const recency = Math.exp(-delta / TAU_F);
+    const nBar = Math.max(1, Stats.nBar);
+    const saturation = KAPPA_SAT * Math.max(0, Stats.N[i] / nBar - 1);
+    return recency + saturation;
+  }
+
+  /* ==================================================================
+     TEMPERATURE
+     ================================================================== */
+  function currentTemp() {
+    const s = Session.S;
+    const g = sigmoid((s - THETA_S) / TAU_S);
+    let T = T_MIN + (T_MAX - T_MIN) * (1 - g);
+    if (Session.streak >= STREAK_HOT) T *= STREAK_MULT;
+    return T;
+  }
+
+  /* ==================================================================
+     SHORTLIST + DRAW
+     ================================================================== */
+  function refillShortlist() {
+    shortlist = [];
+    const M = Math.min(SHORTLIST, sampler.n);
+    for (let i = 0; i < M; i++) {
+      const idx = sampler.draw();
+      if (idx < 0) break;
+      if (staticWeight(idx) > 0) shortlist.push(idx);
+    }
+  }
+
+  function nextItem() {
+    if (shortlist.length < Math.max(1, Math.floor(SHORTLIST / 4))) {
+      refillShortlist();
+    }
+    if (shortlist.length === 0) {
+      sampler._reset();
+      refillShortlist();
+    }
+    if (shortlist.length === 0) return -1;
+
+    const T = currentTemp();
+    const isJackpot = Math.random() < P_JACKPOT;
+
+    const scored = [];
+    for (const idx of shortlist) {
+      if (sameChannelBlocked(idx)) continue;
+      const base = staticLogWeight(idx);
+      if (base === -Infinity) continue;
+      const sd = Math.sqrt(1 / Stats.A[idx] + 1 / Stats.B[idx]);
+      let lw = base + (KAPPA * sd * randn()) / T;
+      lw -= LAMBDA_D * diversityPenalty(idx);
+      lw -= LAMBDA_F * fatiguePenalty(idx);
+      scored.push({ idx, lw });
+    }
+
+    if (scored.length === 0) {
+      recent.length = 0;
+      for (const idx of shortlist) {
+        if (staticLogWeight(idx) > -Infinity) {
+          const pos = shortlist.indexOf(idx);
+          if (pos >= 0) shortlist.splice(pos, 1);
+          recent.push(idx);
+          if (recent.length > K_DIV) recent.shift();
+          return idx;
+        }
+      }
+      return -1;
+    }
+
+    if (isJackpot) {
+      scored.sort((x, y) => y.lw - x.lw);
+      const topN = Math.max(1, Math.ceil(scored.length / 10));
+      for (let k = 0; k < topN; k++) scored[k].lw += pareto();
+    }
+
+    let maxLw = -Infinity;
+    for (const s of scored) if (s.lw > maxLw) maxLw = s.lw;
+    let total = 0;
+    const ws = new Array(scored.length);
+    for (let k = 0; k < scored.length; k++) {
+      ws[k] = Math.exp(scored[k].lw - maxLw);
+      total += ws[k];
+    }
+
+    let r = Math.random() * total;
+    let pick = scored[scored.length - 1].idx;
+    for (let k = 0; k < scored.length; k++) {
+      r -= ws[k];
+      if (r <= 0) { pick = scored[k].idx; break; }
+    }
+
+    const pos = shortlist.indexOf(pick);
+    if (pos >= 0) shortlist.splice(pos, 1);
+
+    recent.push(pick);
+    if (recent.length > K_DIV) recent.shift();
+
+    return pick;
+  }
+
+  /* ==================================================================
+     IMPRESSION TRACKING
+     ================================================================== */
+  function computeReward(slide, t) {
+    const liked    = slide._liked    ? 1 : 0;
+    const disliked = slide._disliked ? 1 : 0;
+    const shared   = slide._impShare ? 1 : 0;
+    const unmuted  = slide._impUnmute ? 1 : 0;
+
+    const Phi = 1 - Math.exp(-t / TAU_PHI);
+    const c   = Math.min(1, t / T_COMPLETE);
+    const B   = Math.max(0, 1 - t / T_BOUNCE);
+
+    const raw =
+      A_LIKE * liked +
+      A_DISLIKE * disliked +
+      A_SHARE * shared +
+      A_COMPLETE * c +
+      A_PHI * Phi +
+      A_UNMUTE * unmuted -
+      A_BOUNCE * B;
+
+    return Math.tanh(BETA_S * raw);
+  }
+
+  function closeImpression(slide) {
+    if (!slide || !slide._impStart) return;
+    const t = performance.now() - slide._impStart;
+    slide._impStart = 0;
+
+    if (t < MIN_DWELL) return;
+    if (slide.classList.contains("failed")) return;
+
+    const idx = slide._impIdx;
+    if (idx === undefined) return;
+
+    const r = computeReward(slide, t);
+
+    // Train hazard model
+    const x = Hazard.features(Session.S, Session.k, !!searchScores, t);
+    Hazard.train(x, r > 0 ? 1 : 0);
+
+    // Update rolling satisfaction
+    Session.S = (1 - RHO) * Session.S + RHO * r;
+
+    // Update streak
+    if (r > 0.5)      Session.streak++;
+    else if (r < 0)   Session.streak = 0;
+
+    // Update item posterior
+    Stats.update(idx, r);
+
+    // Update sampler weight for this item
+    sampler.setWeight(idx, staticWeight(idx));
+
+    // Update UI
+    updateStreakUI();
+    updateSatisfactionUI();
+
+    Session.k++;
+  }
+
+  /* ==================================================================
+     UI STATE
+     ================================================================== */
+  function updateStreakUI() {
+    if (Session.streak >= 2) {
+      STREAK.classList.add("on");
+      STREAK_N.textContent = Session.streak;
+    } else {
+      STREAK.classList.remove("on");
+    }
+  }
+
+  function updateSatisfactionUI() {
+    const norm = (Session.S + 1) / 2;
+    const clamped = Math.max(0.02, Math.min(1, norm));
+    SAT_BAR.style.transform = "scaleX(" + clamped + ")";
+  }
+
+  function burstHearts(button) {
+    const rect = button.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 8; i++) {
+      const el = document.createElement("div");
+      el.className = "heart-burst";
+      el.textContent = "❤";
+      el.style.left = cx + "px";
+      el.style.top  = cy + "px";
+      el.style.setProperty("--dx",  ((Math.random() - 0.5) * 120) + "px");
+      el.style.setProperty("--dy",  (-40 - Math.random() * 80) + "px");
+      el.style.setProperty("--rot", ((Math.random() - 0.5) * 90) + "deg");
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 950);
+    }
+  }
+
+  /* ==================================================================
+     FEED RESET
      ================================================================== */
   function resetFeed() {
-    /* tear down slides */
     let el = FEED.firstChild;
     while (el) {
       const next = el.nextSibling;
@@ -711,14 +1329,14 @@
       el.remove();
       el = next;
     }
-    history.length = 0;
-    FEED.scrollTop = 0;
-
+    history.length  = 0;
+    shortlist       = [];
+    FEED.scrollTop  = 0;
     if (searchCount > 0) appendBatch(PRELOAD_COUNT, true);
   }
 
   /* ==================================================================
-     Intersection observer
+     INTERSECTION OBSERVER
      ================================================================== */
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) {
@@ -728,13 +1346,16 @@
   }, { root: FEED, threshold: 0.7 });
 
   /* ==================================================================
-     Slide factory
+     SLIDE FACTORY
      ================================================================== */
   function makeSlide(v, idx, eager) {
     const s = document.createElement("section");
     s.className  = "short";
     s.dataset.id = v.id;
     s._idx       = idx;
+    s._impStart  = 0;
+    s._impShare  = false;
+    s._impUnmute = false;
 
     const img = document.createElement("img");
     img.className = "thumb";
@@ -756,6 +1377,7 @@
     fb.target    = "_blank";
     fb.rel       = "noopener";
     fb.innerHTML = SVG_PLAY + "<span>Watch on YouTube</span>";
+    fb.addEventListener("click", () => { s._impShare = true; });
     s.appendChild(fb);
 
     const meta = document.createElement("div");
@@ -785,7 +1407,11 @@
     rail.append(likeBtn, disBtn);
     s.appendChild(rail);
 
-    /* restored state */
+    const prog = document.createElement("div");
+    prog.className = "progress";
+    prog.innerHTML = '<div class="progress-fill"></div>';
+    s.appendChild(prog);
+
     s._liked    = Store.isLiked(v.id);
     s._disliked = Store.isDisliked(v.id);
 
@@ -807,11 +1433,9 @@
     }
     render();
 
-    /* absolute weight write; O(log n) sampler update */
     function setUserWeight(m) {
-      m = clampWeight(m);
       userWeights[idx] = m;
-      if (sampler) sampler.setWeight(idx, computeBase(idx));
+      if (sampler) sampler.setWeight(idx, staticWeight(idx));
       Store.markWeight(v.id);
     }
 
@@ -821,7 +1445,7 @@
         s._liked = false;
         s._likeCount = Math.max(0, s._likeCount - 1);
         Store.setLiked(v.id, false);
-        setUserWeight(1);
+        setUserWeight(U_DEFAULT);
       } else {
         s._liked = true;
         s._likeCount += 1;
@@ -831,10 +1455,10 @@
           Store.setDisliked(v.id, false);
         }
         Store.setLiked(v.id, true);
-        setUserWeight(LIKE_MULT);
+        setUserWeight(U_LIKE);
+        burstHearts(likeBtn);
       }
       render();
-      pulse(likeBtn);
     });
 
     disBtn.addEventListener("click", (e) => {
@@ -843,7 +1467,7 @@
         s._disliked = false;
         s._dislikeCount = Math.max(0, s._dislikeCount - 1);
         Store.setDisliked(v.id, false);
-        setUserWeight(1);
+        setUserWeight(U_DEFAULT);
       } else {
         s._disliked = true;
         s._dislikeCount += 1;
@@ -853,30 +1477,27 @@
           Store.setLiked(v.id, false);
         }
         Store.setDisliked(v.id, true);
-        setUserWeight(DISLIKE_MULT);
+        setUserWeight(U_DISLIKE);
       }
       render();
-      pulse(disBtn);
     });
 
     io.observe(s);
     return s;
   }
 
-  function pulse(el) {
-    if (!el.animate) return;
-    el.animate(
-      [{ transform:"scale(1)" }, { transform:"scale(1.22)" }, { transform:"scale(1)" }],
-      { duration:220, easing:"ease-out" }
-    );
-  }
-
   /* ==================================================================
-     Activate / deactivate
+     ACTIVATE / DEACTIVATE
      ================================================================== */
   function activate(slide) {
     if (slide.dataset.on === "1") return;
     slide.dataset.on = "1";
+
+    // Start impression
+    slide._impStart  = performance.now();
+    slide._impIdx    = slide._idx;
+    slide._impShare  = false;
+    slide._impUnmute = false;
 
     const id = slide.dataset.id;
     const origin = (location.protocol === "http:" || location.protocol === "https:")
@@ -930,6 +1551,7 @@
   function deactivate(slide) {
     if (slide.dataset.on !== "1") return;
     slide.dataset.on = "0";
+    closeImpression(slide);
     slide._cleanup?.();
     slide.querySelector("iframe")?.remove();
     slide.querySelector(".thumb")?.classList.remove("hidden");
@@ -945,13 +1567,13 @@
   }
 
   /* ==================================================================
-     Batch append
+     BATCH APPEND
      ================================================================== */
   function appendBatch(n = BATCH, eager = false) {
     if (searchCount === 0) return;
     const frag = document.createDocumentFragment();
     for (let i = 0; i < n; i++) {
-      const idx = sampler.draw();
+      const idx = nextItem();
       if (idx < 0) break;
       frag.appendChild(makeSlide(pool[idx], idx, eager));
     }
@@ -959,7 +1581,7 @@
   }
 
   /* ==================================================================
-     Virtualization
+     VIRTUALIZATION
      ================================================================== */
   function trim() {
     const kids = FEED.children;
@@ -1009,7 +1631,7 @@
   }
 
   /* ==================================================================
-     Scroll
+     SCROLL
      ================================================================== */
   function maybeAppend() {
     const remaining = FEED.scrollHeight - (FEED.scrollTop + FEED.clientHeight);
@@ -1030,7 +1652,7 @@
   }
 
   /* ==================================================================
-     Navigation
+     NAVIGATION
      ================================================================== */
   function go(dir) {
     const h = FEED.clientHeight || 1;
@@ -1045,26 +1667,20 @@
 
   window.addEventListener("keydown", (e) => {
     const tag = (e.target && e.target.tagName) || "";
-    if (tag === "INPUT" || tag === "TEXTAREA" || (e.target && e.target.isContentEditable)) {
-      /* Escape while typing: blur the search and clear is up to the user */
-      if (e.key === "Escape" && e.target === SEARCH) {
-        SEARCH.blur();
-      }
+    if (tag === "INPUT" || tag === "TEXTAREA" ||
+        (e.target && e.target.isContentEditable)) {
+      if (e.key === "Escape" && e.target === SEARCH) SEARCH.blur();
       return;
     }
-
     switch (e.key) {
-      case "ArrowDown":
-      case "PageDown":
-      case "j":
+      case "ArrowDown": case "PageDown": case "j":
         e.preventDefault(); go(1); break;
-      case "ArrowUp":
-      case "PageUp":
-      case "k":
+      case "ArrowUp":   case "PageUp":   case "k":
         e.preventDefault(); go(-1); break;
       case "Home":
         e.preventDefault();
-        FEED.scrollTo({ top: 0, behavior: "smooth" }); break;
+        FEED.scrollTo({ top: 0, behavior: "smooth" });
+        break;
       case "End":
         e.preventDefault();
         while (FEED.scrollHeight - FEED.scrollTop - FEED.clientHeight < FEED.clientHeight * 2) {
@@ -1075,7 +1691,6 @@
     }
   });
 
-  /* wheel handler moved to window so the search bar does not swallow it */
   let wheelLock = 0;
   window.addEventListener("wheel", (e) => {
     if (e.target && e.target.tagName === "INPUT") return;
@@ -1100,43 +1715,42 @@
     const dy = e.changedTouches[0].clientY - tStartY;
     const dt = performance.now() - tStartTime;
     const h  = FEED.clientHeight || 1;
-
     const moved = Math.abs(FEED.scrollTop - tStartScroll);
     if (moved > h * SWIPE_FALLBACK) return;
-
     const quick = dt < SWIPE_MAX_MS && Math.abs(dy) > SWIPE_MIN_PX;
     const big   = Math.abs(dy) > 100;
     if (!quick && !big) return;
-
     go(dy < 0 ? 1 : -1);
   }, { passive: true });
 
   /* ==================================================================
-     Mute
+     MUTE
      ================================================================== */
   MUTE.addEventListener("click", () => {
     muted = !muted;
     MUTE.classList.toggle("unmuted", !muted);
     MUTE.setAttribute("aria-label", muted ? "Unmute" : "Mute");
+    if (!muted) {
+      // Mark that user unmuted — will count toward reward on active slide
+      FEED.querySelectorAll('.short[data-on="1"]').forEach(s => {
+        s._impUnmute = true;
+      });
+    }
     FEED.querySelectorAll(".short iframe")
       .forEach(f => cmd(f, muted ? "mute" : "unMute"));
   });
 
   /* ==================================================================
-     Search UI  +  real-time filtering
+     SEARCH UI
      ================================================================== */
-  let searchTimer  = 0;
-  let lastQuery    = "";
+  let searchTimer = 0;
+  let lastQuery   = "";
 
   function updateSearchChrome(active) {
     TOPBAR.classList.toggle("has-text", active);
-    if (active && searchCount > 0) {
-      SCOUNT.textContent = String(searchCount);
-    } else {
-      SCOUNT.textContent = "";
-    }
+    if (active && searchCount > 0) SCOUNT.textContent = String(searchCount);
+    else                          SCOUNT.textContent = "";
   }
-
   function updateEmptyState(show, q) {
     if (show) {
       ESQUERY.textContent = q ? ('"' + q + '"') : "";
@@ -1163,7 +1777,6 @@
       updateEmptyState(res.count === 0, norm);
       updateSearchChrome(true);
     }
-
     syncSampler();
     resetFeed();
   }
@@ -1192,26 +1805,26 @@
   });
 
   /* ==================================================================
-     Banner
+     BANNER
      ================================================================== */
   function banner(text, color) {
     const el = document.createElement("div");
     el.style.cssText =
       "position:fixed;left:12px;bottom:calc(10px + env(safe-area-inset-bottom));" +
-      "z-index:30;background:" + (color || "rgba(255,0,0,.85)") + ";color:#fff;" +
+      "z-index:30;background:" + (color || "rgba(255,0,0,0.85)") + ";color:#fff;" +
       "padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none";
     el.textContent = text;
     document.body.appendChild(el);
   }
 
   /* ==================================================================
-     Boot
+     BOOT
      ================================================================== */
   (async function boot() {
     const t0 = performance.now();
 
-    /* ---------- video list ---------- */
-    let list = null, source = "network", note = "";
+    /* ---- load list ---- */
+    let list, source = "network", note = "";
     try {
       if (location.protocol === "file:") throw new Error("file:// blocks fetch");
       const out = await loadVideos();
@@ -1221,58 +1834,87 @@
       list   = DEMO;
       source = "demo";
       note   = err.message;
-      console.warn("Falling back to demo data:", err.message);
+      console.warn("Demo fallback:", err.message);
     }
-
     pool = list;
 
-    /* ---------- indices ---------- */
+    /* ---- build indices ---- */
     buildHaystack();
 
-    /* ---------- weights (persistent) ---------- */
-    userWeights = new Float64Array(pool.length).fill(1);
-
+    /* ---- per-item state ---- */
+    userWeights = new Float64Array(pool.length).fill(U_DEFAULT);
     const idxMap = new Map();
     for (let i = 0; i < pool.length; i++) idxMap.set(pool[i].id, i);
 
-    /* ---------- persistence ---------- */
+    const A    = new Float32Array(pool.length).fill(A0);
+    const B    = new Float32Array(pool.length).fill(B0);
+    const N    = new Uint32Array(pool.length);
+    const LAST = new Uint32Array(pool.length);
+
+    /* ---- persistence ---- */
     try {
       if (location.protocol === "file:") {
         Store.disable();
+        Stats.disable();
+        Hazard.disable();
       } else {
         Store.attach(idxMap, userWeights);
         Store.load();
+        Stats.attach(idxMap, A, B, N, LAST);
+        await Stats.load();
+        Stats.decayAll();
+        Hazard.load();
       }
-    } catch (_) { Store.disable(); }
+    } catch (_) {
+      Store.disable();
+      Stats.disable();
+      Hazard.disable();
+    }
 
-    /* ---------- sampler with restored weights ---------- */
+    /* ---- sampler ---- */
     sampler = new Sampler(pool.length);
     searchScores = null;
     searchCount  = pool.length;
     syncSampler();
 
-    MSG.remove();
+    /* ---- first paint ---- */
+    MSG.classList.add("gone");
+    setTimeout(() => MSG.remove(), 500);
 
-    /* ---------- first paint ---------- */
     appendBatch(PRELOAD_COUNT, true);
-
     FEED.addEventListener("scroll", onScroll, { passive: true });
 
-    /* ---------- persist on tab hide / unload ---------- */
-    const flushNow = () => Store.flush();
+    // Hide swipe hint once user scrolls
+    let hintHidden = false;
+    FEED.addEventListener("scroll", () => {
+      if (!hintHidden && FEED.scrollTop > 20) {
+        hintHidden = true;
+        SWIPE.classList.add("hidden");
+      }
+    }, { passive: true });
+
+    /* ---- persistence on hide ---- */
+    const flushAll = () => {
+      Store.flush();
+      Stats.flush();
+      Hazard.save();
+    };
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") flushNow();
+      if (document.visibilityState === "hidden") {
+        FEED.querySelectorAll('.short[data-on="1"]').forEach(closeImpression);
+        flushAll();
+      }
     });
-    window.addEventListener("pagehide", flushNow);
+    window.addEventListener("pagehide", flushAll);
 
     const ms = Math.round(performance.now() - t0);
     console.info(
-      "shorts: " + pool.length + " videos from " + source +
-      " in " + ms + "ms (preloaded " + PRELOAD_COUNT + ")"
+      "YipYap ready: " + pool.length + " videos from " + source +
+      " in " + ms + "ms"
     );
 
     if (source === "demo") {
-      banner("Demo mode - serve over http:// to load video.json (" + note + ")");
+      banner("Demo mode — serve over http:// to load video.json (" + note + ")");
     }
   })();
 })();
