@@ -113,21 +113,6 @@
     pointer-events:none; z-index:2;
   }
 
-  /* ---------- fallback ---------- */
-  .short .fallback {
-    position:absolute; inset:0;
-    display:none;
-    align-items:center; justify-content:center; gap:8px;
-    text-align:center; padding:24px;
-    color:#fff; font-size:14px; line-height:1.6;
-    background:rgba(0,0,0,0.7);
-    text-decoration:none;
-    z-index:5;
-  }
-  .short.failed .fallback { display:flex; }
-  .short.failed .thumb { opacity:.35; }
-  .fallback svg { width:18px; height:18px; }
-
   /* ---------- meta ---------- */
   .meta {
     position:absolute;
@@ -378,7 +363,8 @@
   const KEEP_BELOW        = 18;
   const PREFETCH_SCREENS  = 2.5;
   const HISTORY_MAX       = 200;
-  const EMBED_TIMEOUT     = 4000;
+  const EMBED_TIMEOUT     = 12000;
+  const EMBED_MAX_RETRIES = 5;
   const SHARD_CONCURRENCY = 6;
 
   const WHEEL_THRESHOLD   = 25;
@@ -396,12 +382,7 @@
   const SAVE_MAX_W        = 5000;
   const SAVE_MAX_LD       = 2000;
 
-  /* ---- AGGRESSION CONTROL ---- 
-     High Aggression (<0.5): Almost always shows highly liked videos (Exploit)
-     Med Aggression  (~0.5): Balanced (Shows liked about 1/2 the time)
-     Low Aggression  (>0.5): Barely shows liked videos (Explore)
-  */
-  let aggression = 0.1;
+  let aggression = 0.05;
 
   /* ---- reward function ---- */
   const TAU_PHI      = 5000;
@@ -497,10 +478,6 @@
     'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="M17 14V2"/>' +
       '<path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>' +
-    '</svg>';
-  const SVG_PLAY =
-    '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none">' +
-      '<polygon points="6 4 20 12 6 20 6 4"/>' +
     '</svg>';
 
   /* ==================================================================
@@ -1345,15 +1322,6 @@
     img.src = v.thumbnail || ("https://i.ytimg.com/vi/" + v.id + "/hqdefault.jpg");
     s.appendChild(img);
 
-    const fb = document.createElement("a");
-    fb.className = "fallback";
-    fb.href      = "https://www.youtube.com/watch?v=" + v.id;
-    fb.target    = "_blank";
-    fb.rel       = "noopener";
-    fb.innerHTML = SVG_PLAY + "<span>Watch on YouTube</span>";
-    fb.addEventListener("click", () => { s._impShare = true; });
-    s.appendChild(fb);
-
     const meta = document.createElement("div");
     meta.className = "meta";
     const ch = document.createElement("div"); ch.className = "ch";
@@ -1460,11 +1428,8 @@
      ================================================================== */
   function activate(slide) {
     if (slide.dataset.on === "1") return;
-    if (activeSlide && activeSlide !== slide) {
-      deactivate(activeSlide);
-    }
+    if (activeSlide && activeSlide !== slide) deactivate(activeSlide);
     activeSlide = slide;
-
     slide.dataset.on = "1";
 
     slide._impStart  = performance.now();
@@ -1485,57 +1450,86 @@
       params.set("origin", origin);
       params.set("enablejsapi", "1");
     }
+    const embedUrl = "https://www.youtube-nocookie.com/embed/" + id + "?" + params.toString();
 
-    const frame = document.createElement("iframe");
-    frame.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
-    frame.setAttribute("allowfullscreen", "");
-    frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-    frame.src = "https://www.youtube-nocookie.com/embed/" + id + "?" + params.toString();
+    let frame      = null;
+    let ready      = false;
+    let attempts   = 0;
+    let retryTimer = 0;
+    let loadTimer  = 0;
 
-    let ready = false;
-    
     const onReady = (e) => {
-      if (e.source !== frame.contentWindow) return;
+      if (!frame || e.source !== frame.contentWindow) return;
       if (!e.origin.includes("youtube")) return;
       try {
         const d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
         if (d && (d.event === "onReady" || d.event === "initialDelivery")) {
           ready = true;
-          clearTimeout(timer);
+          clearTimeout(loadTimer);
           slide.querySelector(".thumb")?.classList.add("hidden");
           slide.classList.remove("failed");
-          
           cmd(frame, muted ? "mute" : "unMute");
           cmd(frame, "playVideo");
-          
           window.removeEventListener("message", onReady);
         }
       } catch (_) {}
     };
-    window.addEventListener("message", onReady);
 
-    frame.addEventListener("load", () => {
-      try {
-        frame.contentWindow.postMessage('{"event":"listening"}', '*');
-      } catch (_) {}
-      
-      if (!muted) setTimeout(() => { if (!ready) cmd(frame, "unMute"); }, 500);
-    });
-
-    const timer = setTimeout(() => {
-      if (!ready) {
-        slide.classList.add("failed");
+    function teardownFrame() {
+      clearTimeout(loadTimer);
+      if (frame) {
+        try { cmd(frame, "pauseVideo"); } catch (_) {}
         frame.remove();
-        window.removeEventListener("message", onReady);
+        frame = null;
       }
-    }, EMBED_TIMEOUT);
+    }
+
+    function mount() {
+      if (slide.dataset.on !== "1") return;
+      teardownFrame();
+      ready = false;
+      slide.classList.remove("failed");
+
+      const f = document.createElement("iframe");
+      f.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
+      f.setAttribute("allowfullscreen", "");
+      f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+      f.src = embedUrl + (attempts ? "&r=" + attempts : "");
+      frame = f;
+
+      f.addEventListener("load", () => {
+        try { f.contentWindow.postMessage('{"event":"listening"}', '*'); } catch (_) {}
+        if (!muted) setTimeout(() => { if (!ready) cmd(f, "unMute"); }, 500);
+      });
+      f.addEventListener("error", () => { if (!ready) fail(); });
+
+      slide.appendChild(f);
+
+      loadTimer = setTimeout(() => { if (!ready) fail(); }, EMBED_TIMEOUT);
+    }
+
+    function fail() {
+      if (slide.dataset.on !== "1") return;
+      // Internal flag only — no visible UI, no external link.
+      slide.classList.add("failed");
+      if (attempts >= EMBED_MAX_RETRIES) {
+        teardownFrame();
+        return; // Give up silently on the thumbnail.
+      }
+      attempts++;
+      teardownFrame();
+      retryTimer = setTimeout(mount, Math.min(8000, 600 * Math.pow(2, attempts - 1)));
+    }
 
     slide._cleanup = () => {
-      clearTimeout(timer);
+      clearTimeout(retryTimer);
+      clearTimeout(loadTimer);
       window.removeEventListener("message", onReady);
+      teardownFrame();
     };
 
-    slide.appendChild(frame);
+    window.addEventListener("message", onReady);
+    mount();
   }
 
   function deactivate(slide) {
