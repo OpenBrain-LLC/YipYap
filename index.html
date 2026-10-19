@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>YipYap | app</title>
+<!-- Inline SVG Favicon -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ff2e63'/%3E%3Cpath d='M30 35 L50 60 L70 35' stroke='white' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M50 60 L50 80' stroke='white' stroke-width='12' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
 <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
@@ -24,20 +26,6 @@
     height:100%; background:#000; overflow:hidden;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     overscroll-behavior:none;
-  }
-
-  /* ---------- satisfaction bar ---------- */
-  #satisfaction {
-    position:fixed; top:0; left:0; right:0; height:2px;
-    background:rgba(255,255,255,0.05);
-    z-index:25; pointer-events:none; overflow:hidden;
-  }
-  #satisfaction-bar {
-    position:absolute; inset:0;
-    background:linear-gradient(90deg, var(--accent), var(--accent-3), var(--accent-2));
-    transform:scaleX(0.5); transform-origin:left;
-    transition:transform 0.45s cubic-bezier(0.4,0,0.2,1);
-    will-change:transform;
   }
 
   /* ---------- streak flame ---------- */
@@ -114,6 +102,7 @@
     object-fit:cover;
     filter:brightness(0.68);
     transition:opacity 0.3s;
+    z-index:1;
   }
   .short .thumb.hidden { opacity:0; }
 
@@ -124,26 +113,6 @@
     pointer-events:none; z-index:2;
   }
 
-  /* ---------- per-slide progress ---------- */
-  .progress {
-    position:absolute; left:0; right:0; bottom:0; height:2px;
-    background:rgba(255,255,255,0.08);
-    z-index:6; pointer-events:none;
-    overflow:hidden;
-  }
-  .progress-fill {
-    height:100%; width:0%;
-    background:linear-gradient(90deg, var(--accent), var(--accent-3));
-    box-shadow:0 0 8px rgba(255,46,99,0.6);
-  }
-  .short[data-on="1"] .progress-fill {
-    animation:progressGrow 30s linear forwards;
-  }
-  @keyframes progressGrow {
-    from { width:0%; }
-    to   { width:100%; }
-  }
-
   /* ---------- fallback ---------- */
   .short .fallback {
     position:absolute; inset:0;
@@ -151,8 +120,9 @@
     align-items:center; justify-content:center; gap:8px;
     text-align:center; padding:24px;
     color:#fff; font-size:14px; line-height:1.6;
-    background:linear-gradient(180deg,#1a1a1a,#000);
+    background:rgba(0,0,0,0.7);
     text-decoration:none;
+    z-index:5;
   }
   .short.failed .fallback { display:flex; }
   .short.failed .thumb { opacity:.35; }
@@ -193,7 +163,7 @@
     position:absolute;
     right:10px;
     bottom:calc(92px + env(safe-area-inset-bottom));
-    z-index:4;
+    z-index:6;
     display:flex; flex-direction:column;
     gap:18px; align-items:center;
   }
@@ -323,32 +293,6 @@
     50%     { box-shadow:0 0 0 10px rgba(255,46,99,0); }
   }
 
-  /* ---------- swipe hint ---------- */
-  #swipe-hint {
-    position:fixed;
-    bottom:calc(150px + env(safe-area-inset-bottom));
-    left:50%; transform:translateX(-50%);
-    z-index:18;
-    display:flex; flex-direction:column;
-    align-items:center; gap:4px;
-    color:rgba(255,255,255,0.75);
-    font-size:11px; font-weight:600;
-    letter-spacing:0.4px;
-    pointer-events:none;
-    animation:swipeHint 2.2s ease-in-out infinite;
-    transition:opacity 0.5s;
-    text-transform:uppercase;
-  }
-  #swipe-hint.hidden { opacity:0; }
-  #swipe-hint svg {
-    width:20px; height:20px;
-    filter:drop-shadow(0 1px 4px rgba(0,0,0,0.8));
-  }
-  @keyframes swipeHint {
-    0%,100% { transform:translateX(-50%) translateY(0);   opacity:0.55; }
-    50%     { transform:translateX(-50%) translateY(-8px); opacity:1; }
-  }
-
   /* ---------- loading ---------- */
   #msg {
     position:fixed; inset:0; z-index:50;
@@ -368,8 +312,6 @@
 </style>
 </head>
 <body>
-
-<div id="satisfaction"><div id="satisfaction-bar"></div></div>
 
 <div id="streak">
   <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -419,15 +361,6 @@
   </svg>
 </button>
 
-<div id="swipe-hint">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="19" x2="12" y2="5"/>
-    <polyline points="5 12 12 5 19 12"/>
-  </svg>
-  <span>Swipe up</span>
-</div>
-
 <div id="msg"><div class="spinner"></div></div>
 
 <script>
@@ -456,12 +389,19 @@
 
   const SEARCH_DEBOUNCE   = 100;
 
-  const CACHE_KEY         = "yipyap.videos.v1";
+  const CACHE_KEY         = "yipyap.videos.v2";
   const STATE_KEY         = "yipyap.state.v1";
   const STATS_KEY         = "yipyap.stats.v1";
   const SAVE_DEBOUNCE     = 400;
   const SAVE_MAX_W        = 5000;
   const SAVE_MAX_LD       = 2000;
+
+  /* ---- AGGRESSION CONTROL ---- 
+     High Aggression (<0.5): Almost always shows highly liked videos (Exploit)
+     Med Aggression  (~0.5): Balanced (Shows liked about 1/2 the time)
+     Low Aggression  (>0.5): Barely shows liked videos (Explore)
+  */
+  let aggression = 0.1;
 
   /* ---- reward function ---- */
   const TAU_PHI      = 5000;
@@ -521,6 +461,14 @@
   const LOG_W_MAX    = Math.log(1e3);
 
   /* ==================================================================
+     EXPOSE AGGRESSION TO WINDOW FOR EASY TESTING
+     ================================================================== */
+  window.setAggression = (val) => {
+    aggression = Math.max(0.01, Math.min(1.0, val));
+    console.info(`Aggression set to: ${aggression}`);
+  };
+
+  /* ==================================================================
      DOM
      ================================================================== */
   const FEED     = document.getElementById("feed");
@@ -532,10 +480,8 @@
   const SCOUNT   = document.getElementById("scount");
   const EMPTY    = document.getElementById("empty-state");
   const ESQUERY  = document.getElementById("esquery");
-  const SAT_BAR  = document.getElementById("satisfaction-bar");
   const STREAK   = document.getElementById("streak");
   const STREAK_N = STREAK.querySelector(".num");
-  const SWIPE    = document.getElementById("swipe-hint");
 
   /* ==================================================================
      SVG
@@ -734,6 +680,7 @@
         if (l.length > SAVE_MAX_LD) l = l.slice(-SAVE_MAX_LD);
         if (d.length > SAVE_MAX_LD) d = d.slice(-SAVE_MAX_LD);
         localStorage.setItem(STATE_KEY, JSON.stringify({ v:1, w, l, d }));
+        dirty.clear();
       } catch (e) {
         console.warn("store: save failed", e);
       }
@@ -791,14 +738,16 @@
     let B        = null;
     let N        = null;
     let LAST     = null;
-    let impCount = 100;          // start high so untouched items = no fatigue
+    let impCount = 100;
+    let totalN   = 0;
+    let nBar     = 1;
     let dirty    = false;
     let timer    = 0;
     let enabled  = true;
-    let nBar     = 1;
 
     function attach(map, aArr, bArr, nArr, lArr) {
       idxMap = map; A = aArr; B = bArr; N = nArr; LAST = lArr;
+      totalN = N.reduce((sum, val) => sum + val, 0);
     }
     function disable() { enabled = false; }
 
@@ -812,7 +761,11 @@
         A[i] = data.a[k];
         B[i] = data.b[k];
         N[i] = data.n[k];
+        if (data.last && data.last[k] !== undefined) LAST[i] = data.last[k];
       }
+      if (data.impCount !== undefined) impCount = data.impCount;
+      if (data.totalN !== undefined) totalN = data.totalN;
+      nBar = totalN / Math.max(1, N.length);
     }
 
     function decayAll() {
@@ -821,6 +774,8 @@
         A[i] *= GAMMA_DECAY;
         B[i] *= GAMMA_DECAY;
       }
+      dirty = true;
+      schedule();
     }
 
     function update(idx, r) {
@@ -828,11 +783,9 @@
       if (r > 0) A[idx] += r;
       else if (r < 0) B[idx] += -r;
       N[idx]++;
+      totalN++;
+      nBar = totalN / Math.max(1, N.length);
       LAST[idx] = ++impCount;
-      // Recompute nBar lazily
-      let sum = 0;
-      for (let i = 0; i < N.length; i++) sum += N[i];
-      nBar = sum / Math.max(1, N.length);
       dirty = true;
       schedule();
     }
@@ -847,14 +800,15 @@
       if (!enabled || !dirty || !A) return;
       dirty = false;
       try {
-        const ids = [], a = [], b = [], n = [];
+        const ids = [], a = [], b = [], n = [], last = [];
         for (let i = 0; i < A.length; i++) {
           ids.push(pool[i].id);
           a.push(A[i]);
           b.push(B[i]);
           n.push(N[i]);
+          last.push(LAST[i]);
         }
-        await idbSet(STATS_KEY, { v:1, ids, a, b, n });
+        await idbSet(STATS_KEY, { v:1, ids, a, b, n, last, impCount, totalN });
       } catch (_) {}
     }
 
@@ -870,7 +824,7 @@
   })();
 
   /* ==================================================================
-     HAZARD MODEL (tiny logistic, persisted)
+     HAZARD MODEL
      ================================================================== */
   const Hazard = (() => {
     let beta = [0, 0, 0, 0, 0, 0];
@@ -985,6 +939,8 @@
   let channelLower = null;
   let titleTokens  = null;
   let muted        = true;
+  let activeSlide  = null;
+  let seenIds      = new Set();
   const history    = [];
   let shortlist    = [];
   const recent     = [];
@@ -1126,14 +1082,24 @@
   }
 
   /* ==================================================================
-     TEMPERATURE
+     TEMPERATURE (Now controlled by AGGRESSION)
      ================================================================== */
   function currentTemp() {
     const s = Session.S;
     const g = sigmoid((s - THETA_S) / TAU_S);
-    let T = T_MIN + (T_MAX - T_MIN) * (1 - g);
+    
+    // Base temperature: if satisfied (g=1), baseT = T_MIN. If unsatisfied (g=0), baseT = T_MAX.
+    const baseT = T_MIN + (T_MAX - T_MIN) * (1 - g);
+    
+    // Apply aggression scaling
+    // If aggression = 0.0 (High), T becomes 0 (pure exploitation)
+    // If aggression = 0.5 (Med), T remains baseT
+    // If aggression = 1.0 (Low), T doubles (pure exploration)
+    let T = baseT * (aggression * 2);
+    
     if (Session.streak >= STREAK_HOT) T *= STREAK_MULT;
-    return T;
+    
+    return Math.max(0.01, T); 
   }
 
   /* ==================================================================
@@ -1146,6 +1112,15 @@
       const idx = sampler.draw();
       if (idx < 0) break;
       if (staticWeight(idx) > 0) shortlist.push(idx);
+    }
+    if (shortlist.length === 0 && seenIds.size > 0) {
+      seenIds.clear();
+      sampler._reset();
+      for (let i = 0; i < M; i++) {
+        const idx = sampler.draw();
+        if (idx < 0) break;
+        if (staticWeight(idx) > 0) shortlist.push(idx);
+      }
     }
   }
 
@@ -1160,7 +1135,10 @@
     if (shortlist.length === 0) return -1;
 
     const T = currentTemp();
-    const isJackpot = Math.random() < P_JACKPOT;
+    
+    // Scale jackpot probability by aggression
+    const actualPJackpot = P_JACKPOT * (aggression * 2);
+    const isJackpot = Math.random() < actualPJackpot;
 
     const scored = [];
     for (const idx of shortlist) {
@@ -1168,7 +1146,10 @@
       const base = staticLogWeight(idx);
       if (base === -Infinity) continue;
       const sd = Math.sqrt(1 / Stats.A[idx] + 1 / Stats.B[idx]);
-      let lw = base + (KAPPA * sd * randn()) / T;
+      
+      // Fixed noise scaling: multiplying by T adds more noise as T increases
+      let lw = base + (KAPPA * sd * randn()) * T;
+      
       lw -= LAMBDA_D * diversityPenalty(idx);
       lw -= LAMBDA_F * fatiguePenalty(idx);
       scored.push({ idx, lw });
@@ -1257,26 +1238,19 @@
 
     const r = computeReward(slide, t);
 
-    // Train hazard model
     const x = Hazard.features(Session.S, Session.k, !!searchScores, t);
     Hazard.train(x, r > 0 ? 1 : 0);
 
-    // Update rolling satisfaction
     Session.S = (1 - RHO) * Session.S + RHO * r;
 
-    // Update streak
     if (r > 0.5)      Session.streak++;
     else if (r < 0)   Session.streak = 0;
 
-    // Update item posterior
     Stats.update(idx, r);
 
-    // Update sampler weight for this item
     sampler.setWeight(idx, staticWeight(idx));
 
-    // Update UI
     updateStreakUI();
-    updateSatisfactionUI();
 
     Session.k++;
   }
@@ -1291,12 +1265,6 @@
     } else {
       STREAK.classList.remove("on");
     }
-  }
-
-  function updateSatisfactionUI() {
-    const norm = (Session.S + 1) / 2;
-    const clamped = Math.max(0.02, Math.min(1, norm));
-    SAT_BAR.style.transform = "scaleX(" + clamped + ")";
   }
 
   function burstHearts(button) {
@@ -1321,6 +1289,10 @@
      FEED RESET
      ================================================================== */
   function resetFeed() {
+    if (activeSlide) {
+      deactivate(activeSlide);
+      activeSlide = null;
+    }
     let el = FEED.firstChild;
     while (el) {
       const next = el.nextSibling;
@@ -1331,6 +1303,8 @@
     }
     history.length  = 0;
     shortlist       = [];
+    recent.length   = 0;
+    seenIds.clear();
     FEED.scrollTop  = 0;
     if (searchCount > 0) appendBatch(PRELOAD_COUNT, true);
   }
@@ -1406,11 +1380,6 @@
 
     rail.append(likeBtn, disBtn);
     s.appendChild(rail);
-
-    const prog = document.createElement("div");
-    prog.className = "progress";
-    prog.innerHTML = '<div class="progress-fill"></div>';
-    s.appendChild(prog);
 
     s._liked    = Store.isLiked(v.id);
     s._disliked = Store.isDisliked(v.id);
@@ -1491,9 +1460,13 @@
      ================================================================== */
   function activate(slide) {
     if (slide.dataset.on === "1") return;
+    if (activeSlide && activeSlide !== slide) {
+      deactivate(activeSlide);
+    }
+    activeSlide = slide;
+
     slide.dataset.on = "1";
 
-    // Start impression
     slide._impStart  = performance.now();
     slide._impIdx    = slide._idx;
     slide._impShare  = false;
@@ -1520,24 +1493,41 @@
     frame.src = "https://www.youtube-nocookie.com/embed/" + id + "?" + params.toString();
 
     let ready = false;
+    
     const onReady = (e) => {
       if (e.source !== frame.contentWindow) return;
+      if (!e.origin.includes("youtube")) return;
       try {
         const d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
         if (d && (d.event === "onReady" || d.event === "initialDelivery")) {
           ready = true;
+          clearTimeout(timer);
           slide.querySelector(".thumb")?.classList.add("hidden");
+          slide.classList.remove("failed");
+          
+          cmd(frame, muted ? "mute" : "unMute");
+          cmd(frame, "playVideo");
+          
+          window.removeEventListener("message", onReady);
         }
       } catch (_) {}
     };
     window.addEventListener("message", onReady);
 
     frame.addEventListener("load", () => {
-      if (!muted) setTimeout(() => cmd(frame, "unMute"), 400);
+      try {
+        frame.contentWindow.postMessage('{"event":"listening"}', '*');
+      } catch (_) {}
+      
+      if (!muted) setTimeout(() => { if (!ready) cmd(frame, "unMute"); }, 500);
     });
 
     const timer = setTimeout(() => {
-      if (!ready) slide.classList.add("failed");
+      if (!ready) {
+        slide.classList.add("failed");
+        frame.remove();
+        window.removeEventListener("message", onReady);
+      }
     }, EMBED_TIMEOUT);
 
     slide._cleanup = () => {
@@ -1549,11 +1539,18 @@
   }
 
   function deactivate(slide) {
-    if (slide.dataset.on !== "1") return;
+    if (!slide || slide.dataset.on !== "1") return;
+    if (activeSlide === slide) activeSlide = null;
+    
     slide.dataset.on = "0";
     closeImpression(slide);
     slide._cleanup?.();
-    slide.querySelector("iframe")?.remove();
+    
+    const iframe = slide.querySelector("iframe");
+    if (iframe) {
+      cmd(iframe, "pauseVideo");
+      iframe.remove();
+    }
     slide.querySelector(".thumb")?.classList.remove("hidden");
     slide.classList.remove("failed");
   }
@@ -1570,14 +1567,28 @@
      BATCH APPEND
      ================================================================== */
   function appendBatch(n = BATCH, eager = false) {
-    if (searchCount === 0) return;
+    if (searchCount === 0) return 0;
+    
+    let added = 0;
+    let attempts = 0;
+    const maxAttempts = n * 5;
+    
     const frag = document.createDocumentFragment();
-    for (let i = 0; i < n; i++) {
+    while (added < n && attempts < maxAttempts) {
+      attempts++;
       const idx = nextItem();
       if (idx < 0) break;
+      
+      const vid = pool[idx].id;
+      if (seenIds.has(vid)) continue;
+      seenIds.add(vid);
+      
       frag.appendChild(makeSlide(pool[idx], idx, eager));
+      added++;
     }
-    FEED.appendChild(frag);
+    
+    if (added > 0) FEED.appendChild(frag);
+    return added;
   }
 
   /* ==================================================================
@@ -1683,8 +1694,10 @@
         break;
       case "End":
         e.preventDefault();
-        while (FEED.scrollHeight - FEED.scrollTop - FEED.clientHeight < FEED.clientHeight * 2) {
-          appendBatch();
+        let attempts = 0;
+        while (FEED.scrollHeight - FEED.scrollTop - FEED.clientHeight < FEED.clientHeight * 2 && attempts < 5) {
+          if (appendBatch() === 0) break;
+          attempts++;
         }
         FEED.scrollTo({ top: FEED.scrollHeight, behavior: "smooth" });
         break;
@@ -1730,11 +1743,10 @@
     muted = !muted;
     MUTE.classList.toggle("unmuted", !muted);
     MUTE.setAttribute("aria-label", muted ? "Unmute" : "Mute");
-    if (!muted) {
-      // Mark that user unmuted — will count toward reward on active slide
-      FEED.querySelectorAll('.short[data-on="1"]').forEach(s => {
-        s._impUnmute = true;
-      });
+    if (!muted && activeSlide) {
+      activeSlide._impUnmute = true;
+      const frame = activeSlide.querySelector("iframe");
+      if (frame) cmd(frame, "unMute");
     }
     FEED.querySelectorAll(".short iframe")
       .forEach(f => cmd(f, muted ? "mute" : "unMute"));
@@ -1884,25 +1896,19 @@
     appendBatch(PRELOAD_COUNT, true);
     FEED.addEventListener("scroll", onScroll, { passive: true });
 
-    // Hide swipe hint once user scrolls
-    let hintHidden = false;
-    FEED.addEventListener("scroll", () => {
-      if (!hintHidden && FEED.scrollTop > 20) {
-        hintHidden = true;
-        SWIPE.classList.add("hidden");
-      }
-    }, { passive: true });
-
     /* ---- persistence on hide ---- */
     const flushAll = () => {
       Store.flush();
       Stats.flush();
       Hazard.save();
     };
+    
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
-        FEED.querySelectorAll('.short[data-on="1"]').forEach(closeImpression);
+        if (activeSlide) deactivate(activeSlide);
         flushAll();
+      } else {
+        if (activeSlide) activate(activeSlide);
       }
     });
     window.addEventListener("pagehide", flushAll);
