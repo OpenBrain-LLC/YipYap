@@ -68,62 +68,19 @@ QUERIES: list = [
     "dessert recipes", "chocolate", "candy making", "street food",
     "food review", "mukbang", "chef", "grilling", "bbq", "smoker",
     "pizza", "burger", "tacos", "sushi", "ramen", "pasta", "coffee",
-    "latte art", "cocktails", "bartender", "mixology", "whiskey",
-    "wine", "beer", "food facts", "kitchen gadgets", "kitchen tools",
-
-    # --- Fitness & sports ---
-    "fitness", "workout", "home workout", "gym", "gym motivation",
-    "bodybuilding", "powerlifting", "calisthenics", "crossfit", "yoga",
-    "pilates", "stretching", "mobility", "running", "marathon",
-    "sprinting", "cycling", "swimming", "boxing", "mma", "muay thai",
-    "bjj", "wrestling", "self defense", "karate", "taekwondo",
-    "kung fu", "parkour", "gymnastics", "cheerleading", "dance",
-    "hip hop dance", "breakdance", "ballet", "salsa", "bachata",
-    "tango", "line dance", "country dance", "contortion", "flexibility",
-    "handstands", "football", "soccer", "basketball", "baseball",
-    "tennis", "golf", "cricket", "rugby", "hockey", "volleyball",
-    "badminton", "table tennis", "pickleball", "skateboarding",
-    "snowboarding", "skiing", "bmx", "motocross", "racing",
-    "formula 1", "nascar", "drift", "drag race", "car meet",
+    "food facts", "kitchen gadgets", "kitchen tools",
 
     # --- Cars, tech & gaming ---
     "car review", "car repair", "engine swap", "motorcycle",
     "dirt bike", "atv", "truck", "offroad", "overlanding", "van life",
     "rv life", "supercars", "luxury cars", "electric cars", "tesla",
-    "car fails", "dashcam", "driving", "gaming", "gaming clips",
-    "funny gaming", "gaming fails", "gaming moments", "esports",
-    "streamer", "twitch", "minecraft", "roblox", "fortnite",
-    "call of duty", "gta", "valorant", "league of legends", "dota",
-    "csgo", "apex legends", "overwatch", "pubg", "free fire",
-    "mobile legends", "clash royale", "pokemon", "zelda", "mario",
-    "sonic", "speedrun", "tech reviews", "iphone tips", "android tips",
+    "car fails", "dashcam", "driving",
     "ai tools", "chatgpt", "coding", "programming", "python",
     "javascript", "web development", "app development",
     "game development", "unity", "unreal engine", "excel tips",
     "photoshop", "video editing", "camera tricks", "photography",
     "drones", "rc cars", "robotics", "arduino", "raspberry pi",
     "electronics",
-
-    # --- Motivation, money & life ---
-    "motivation", "motivational speech", "self improvement",
-    "productivity", "study motivation", "success", "business",
-    "entrepreneur", "side hustle", "passive income", "investing",
-    "stocks", "crypto", "real estate", "money tips", "budgeting",
-    "saving money", "frugal living", "financial freedom",
-    "career advice", "job interview", "resume tips", "public speaking",
-    "communication skills", "body language", "psychology", "stoicism",
-    "philosophy", "life advice", "dating advice", "relationship advice",
-    "marriage", "parenting", "baby", "kids", "family", "mental health",
-    "meditation", "mindfulness", "sleep", "health tips", "skincare",
-    "makeup", "hair", "fashion", "outfits", "thrift", "sneakers",
-    "streetwear", "luxury", "watches", "jewelry", "nails", "tattoos",
-    "home remedies", "first aid", "survival", "prepping", "camping",
-    "hiking", "backpacking", "fishing", "fly fishing", "ice fishing",
-    "hunting", "archery", "shooting", "knife making", "bushcraft",
-    "foraging", "gardening", "hydroponics", "aquaponics", "beekeeping",
-    "chickens", "goats", "cows", "farm", "tractors", "heavy equipment",
-    "construction", "demolition", "excavator", "crane", "bulldozer",
-    "monster trucks",
 
     # --- Science, facts & education ---
     "science", "science experiments", "chemistry", "physics", "biology",
@@ -133,12 +90,12 @@ QUERIES: list = [
     "space", "space facts", "ocean", "nature", "weather",
     "language learning", "english lessons", "spanish lessons",
     "math tricks", "study tips", "how to", "tutorials", "repair",
-    "tips and tricks",
+    "tips and tricks", "veritasium"
 ]
 
-LIMIT = 50           # max videos per search query
-WORKERS = 5          # parallel workers (also the main speed knob)
-SLEEP = 0.4          # politeness delay per entry (per worker)
+LIMIT = 250           # max videos per search query
+WORKERS = 5           # parallel workers (also the main speed knob)
+SLEEP = 0.25          # politeness delay per entry (per worker)
 OUTPUT = "video.json"
 
 HEADERS = {
